@@ -10,6 +10,8 @@ import com.himdev.him.world.HimLocator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -107,7 +109,101 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     }
 
     @Override
+    public boolean fireImmune() {
+        return true;
+    }
+
+    @Override
+    public boolean displayFireAnimation() {
+        return false;
+    }
+
+    @Override
+    public void setSecondsOnFire(int seconds) {
+    }
+
+    @Override
+    public void setRemainingFireTicks(int ticks) {
+    }
+
+    @Override
+    public boolean canBeAffected(MobEffectInstance effect) {
+        return false;
+    }
+
+    @Override
+    public boolean addEffect(MobEffectInstance effect, Entity source) {
+        return false;
+    }
+
+    @Override
+    public boolean isAffectedByPotions() {
+        return false;
+    }
+
+    @Override
+    public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
+        return false;
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    public boolean isPushedByFluid() {
+        return false;
+    }
+
+    @Override
+    public boolean ignoreExplosion() {
+        return true;
+    }
+
+    @Override
+    public void push(Entity entity) {
+    }
+
+    @Override
+    public void push(double x, double y, double z) {
+    }
+
+    @Override
+    protected boolean canRide(Entity vehicle) {
+        return false;
+    }
+
+    @Override
+    protected boolean canAddPassenger(Entity passenger) {
+        return false;
+    }
+
+    @Override
+    protected boolean couldAcceptPassenger() {
+        return false;
+    }
+
+    @Override
+    public boolean startRiding(Entity vehicle, boolean force) {
+        return false;
+    }
+
+    @Override
+    public boolean canCollideWith(Entity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean canBeCollidedWith() {
+        return false;
+    }
+
+    @Override
     protected void customServerAiStep() {
+        this.clearFire();
+        this.removeAllEffects();
+        this.fallDistance = 0.0F;
         super.customServerAiStep();
 
         if (!isValidCombatTarget(this.getTarget())) {
