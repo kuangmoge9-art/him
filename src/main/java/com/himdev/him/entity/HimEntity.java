@@ -37,10 +37,12 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final DivinePunisher DIVINE_PUNISHER = new DivinePunisher();
     private static final HimEnvironmentDominance ENVIRONMENT_DOMINANCE = new HimEnvironmentDominance();
     private static final double VOID_RECOVERY_SPEED = 2.0D;
+    private static final int VOID_TRIGGER_DEPTH = 4;
     private static final int VOID_SAFE_OFFSET = 8;
     private static final int RETURN_STABILIZATION_TICKS = 20;
 
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
+    private boolean recoveringFromVoid;
     private int returnStabilizationTicks;
     private float returnStabilizationYRot;
     private float returnStabilizationXRot;
@@ -245,6 +247,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.clearFire();
         this.removeAllEffects();
         this.fallDistance = 0.0F;
+        updateVoidRecoveryState();
 
         if (returnStabilizationTicks > 0) {
             returnStabilizationTicks--;
@@ -305,7 +308,18 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     }
 
     private boolean shouldRecoverFromVoid() {
-        return this.getY() < this.level().getMinBuildHeight() + VOID_SAFE_OFFSET;
+        return recoveringFromVoid;
+    }
+
+    private void updateVoidRecoveryState() {
+        int minBuildHeight = this.level().getMinBuildHeight();
+        if (!recoveringFromVoid && this.getY() < minBuildHeight - VOID_TRIGGER_DEPTH) {
+            recoveringFromVoid = true;
+            return;
+        }
+        if (recoveringFromVoid && this.getY() >= minBuildHeight + VOID_SAFE_OFFSET) {
+            recoveringFromVoid = false;
+        }
     }
 
     private void syncExistenceSeal(ServerLevel serverLevel) {

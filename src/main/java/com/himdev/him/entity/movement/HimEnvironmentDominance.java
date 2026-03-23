@@ -2,6 +2,7 @@ package com.himdev.him.entity.movement;
 
 import com.himdev.him.entity.HimEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -39,7 +40,7 @@ public final class HimEnvironmentDominance {
             }
         }
 
-        if ((target == null || !target.isAlive()) && (tracker.isPersistentlyObstructed() || tracker.isPersistentlyInFluid())) {
+        if ((target == null || !target.isAlive()) && (tracker.isPersistentlyObstructed() || tracker.isPersistentlyInFluid() || isSealedCrampedSpace(serverLevel, him))) {
             if (escapeNearby(serverLevel, him)) {
                 tracker.resetAfterCorrection(him);
                 return true;
@@ -60,6 +61,21 @@ public final class HimEnvironmentDominance {
         Vec3 elevatedCandidate = him.position().add(0.0D, 3.0D, 0.0D);
         boolean relocated = tryRelocate(level, him, elevatedCandidate, him.getTarget());
         return relocated;
+    }
+
+    private boolean isSealedCrampedSpace(ServerLevel level, HimEntity him) {
+        BlockPos feet = him.blockPosition();
+        BlockPos head = feet.above();
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            BlockState feetSide = level.getBlockState(feet.relative(direction));
+            BlockState headSide = level.getBlockState(head.relative(direction));
+            boolean feetBlocked = !feetSide.canBeReplaced() && !feetSide.isAir();
+            boolean headBlocked = !headSide.canBeReplaced() && !headSide.isAir();
+            if (!feetBlocked || !headBlocked) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean tryRelocate(ServerLevel level, HimEntity him, Vec3 anchor, LivingEntity lookTarget) {

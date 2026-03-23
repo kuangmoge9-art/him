@@ -34,7 +34,7 @@ public final class HimEnvironmentPressureTracker {
             stalledTicks = 0;
         }
 
-        if (him.horizontalCollision || him.verticalCollision || him.isInWall()) {
+        if (him.horizontalCollision || him.isInWall()) {
             obstructedTicks++;
         } else {
             obstructedTicks = 0;
