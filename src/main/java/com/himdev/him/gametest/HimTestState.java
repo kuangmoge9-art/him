@@ -28,4 +28,12 @@ public final class HimTestState {
             HimLocator.clear(level, currentHimId);
         }
     }
+
+    public static void removeHimForTest(GameTestHelper helper, HimEntity him) {
+        him.remove(Entity.RemovalReason.DISCARDED);
+        UUID currentHimId = HimLocator.currentHimId(helper.getLevel());
+        if (currentHimId != null) {
+            HimLocator.clear(helper.getLevel(), currentHimId);
+        }
+    }
 }

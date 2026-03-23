@@ -31,7 +31,7 @@ public final class HimSpawnGameTests {
             if (count != 1) {
                 throw new GameTestAssertException("Expected exactly one Him entity after duplicate spawn attempt, got " + count);
             }
-            himEntities.forEach(entity -> entity.remove(Entity.RemovalReason.DISCARDED));
+            himEntities.forEach(entity -> HimTestState.removeHimForTest(helper, entity));
             helper.succeed();
         });
     }
@@ -48,7 +48,7 @@ public final class HimSpawnGameTests {
         if (!him.isAlive()) {
             throw new GameTestAssertException("Expected Him to remain alive");
         }
-        him.remove(Entity.RemovalReason.DISCARDED);
+        HimTestState.removeHimForTest(helper, him);
         helper.succeed();
     }
 }
