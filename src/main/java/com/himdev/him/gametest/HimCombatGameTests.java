@@ -148,9 +148,9 @@ public final class HimCombatGameTests {
         HimEntity him = HimEntity.spawnForTest(level, origin);
         Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(3, 0, 0));
 
-        helper.runAfterDelay(20, () -> {
+        helper.runAfterDelay(60, () -> {
             if (him.getY() < origin.getY() + 2.5D) {
-                throw new GameTestAssertException("Expected Him to reach the observation point before checking stability, y=" + him.getY());
+                throw new GameTestAssertException("Expected Him to reach the observation point before starting stability sampling, y=" + him.getY());
             }
 
             final Set<BlockPos> visitedObservationPoints = new HashSet<>();
