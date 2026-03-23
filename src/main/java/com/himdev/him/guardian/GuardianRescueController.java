@@ -6,6 +6,7 @@ import com.himdev.him.util.HimLog;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -14,6 +15,7 @@ import net.minecraftforge.fml.common.Mod;
 public final class GuardianRescueController {
     private static final int DIVINE_PROTECTION_TICKS = 100;
     private static final int RESISTANCE_AMPLIFIER = 4;
+    private static final DivinePunisher DIVINE_PUNISHER = new DivinePunisher();
 
     private GuardianRescueController() {
     }
@@ -33,6 +35,7 @@ public final class GuardianRescueController {
         ThreatResolution resolution = ThreatResolver.resolve(event.getSource());
         event.setCanceled(true);
         rescue(player);
+        punishIfNeeded(player.level(), resolution);
         HimLog.info(
                 "rescued player={} source={} punish={} target={} reason={}",
                 player.getGameProfile().getName(),
@@ -52,5 +55,15 @@ public final class GuardianRescueController {
         player.addEffect(new MobEffectInstance(HimEffects.DIVINE_PROTECTION.get(), DIVINE_PROTECTION_TICKS, 0));
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DIVINE_PROTECTION_TICKS, RESISTANCE_AMPLIFIER, false, true, true));
         player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, DIVINE_PROTECTION_TICKS, 0, false, true, true));
+    }
+
+    private static void punishIfNeeded(Level level, ThreatResolution resolution) {
+        if (!resolution.shouldPunish() || level.isClientSide() || resolution.targetEntityId() == null) {
+            return;
+        }
+        if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return;
+        }
+        DIVINE_PUNISHER.punish(serverLevel, resolution.targetEntityId());
     }
 }
