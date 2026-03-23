@@ -1,5 +1,6 @@
 package com.himdev.him.world;
 
+import com.himdev.him.util.HimLog;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.UUID;
@@ -28,12 +29,14 @@ public final class HimLocator {
         HimSavedData data = getData(level);
         UUID currentHimId = data.currentHimId();
         if (currentHimId != null && !currentHimId.equals(himId) && level.getEntity(currentHimId) == null) {
+            HimLog.info("him stale_registration_cleared stale={} replacement={}", currentHimId, himId);
             data.clear(currentHimId);
         }
         return data.tryRegister(himId);
     }
 
     public static void clear(ServerLevel level, UUID himId) {
+        HimLog.info("him registration_cleared uuid={}", himId);
         getData(level).clear(himId);
     }
 

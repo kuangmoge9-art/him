@@ -64,6 +64,7 @@ public final class GuardianRescueController {
         if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
             return;
         }
+        HimLog.info("punishment routed target={} reason={}", resolution.targetEntityId(), resolution.reason());
         DIVINE_PUNISHER.punish(serverLevel, resolution.targetEntityId());
     }
 }
