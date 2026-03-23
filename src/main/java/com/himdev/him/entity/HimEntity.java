@@ -32,6 +32,8 @@ import java.util.Comparator;
 
 public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final DivinePunisher DIVINE_PUNISHER = new DivinePunisher();
+    private static final double VOID_RECOVERY_SPEED = 2.0D;
+    private static final int VOID_SAFE_OFFSET = 8;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -84,13 +86,23 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             HimLog.info("him uniqueness uuid={} accepted={} current={}", getUUID(), registered, HimLocator.currentHimId(serverLevel));
             if (!registered) {
                 HimLog.info("him duplicate_discard uuid={}", getUUID());
+                HimRemovalAuthorizer.authorize(getUUID());
                 discard();
             }
         }
     }
 
     @Override
+    public void kill() {
+    }
+
+    @Override
     public void remove(RemovalReason reason) {
+        if (!level().isClientSide && reason.shouldDestroy() && !HimRemovalAuthorizer.consume(getUUID())) {
+            HimLog.info("him removal_blocked uuid={} reason={}", getUUID(), reason);
+            return;
+        }
+
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel && reason.shouldDestroy()) {
             HimLog.info("him removed uuid={} reason={}", getUUID(), reason);
             HimLocator.clear(serverLevel, getUUID());
@@ -204,6 +216,16 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.clearFire();
         this.removeAllEffects();
         this.fallDistance = 0.0F;
+
+        if (shouldRecoverFromVoid()) {
+            this.setTarget(null);
+            this.setNoGravity(true);
+            this.setDeltaMovement(0.0D, 0.0D, 0.0D);
+            this.setPos(this.getX(), this.getY() + VOID_RECOVERY_SPEED, this.getZ());
+            return;
+        }
+
+        this.setNoGravity(false);
         super.customServerAiStep();
 
         if (!isValidCombatTarget(this.getTarget())) {
@@ -228,5 +250,9 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
                 .stream()
                 .min(Comparator.comparingDouble(this::distanceToSqr))
                 .orElse(null);
+    }
+
+    private boolean shouldRecoverFromVoid() {
+        return this.getY() < this.level().getMinBuildHeight() + VOID_SAFE_OFFSET;
     }
 }

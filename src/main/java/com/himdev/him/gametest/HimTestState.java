@@ -1,6 +1,7 @@
 package com.himdev.him.gametest;
 
 import com.himdev.him.entity.HimEntity;
+import com.himdev.him.entity.HimRemovalAuthorizer;
 import com.himdev.him.world.HimLocator;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
@@ -21,7 +22,10 @@ public final class HimTestState {
                 .map(HimEntity.class::cast)
                 .toList();
 
-        existingHim.forEach(entity -> entity.remove(Entity.RemovalReason.DISCARDED));
+        existingHim.forEach(entity -> {
+            HimRemovalAuthorizer.authorize(entity.getUUID());
+            entity.remove(Entity.RemovalReason.DISCARDED);
+        });
 
         UUID currentHimId = HimLocator.currentHimId(level);
         if (currentHimId != null) {
@@ -30,6 +34,7 @@ public final class HimTestState {
     }
 
     public static void removeHimForTest(GameTestHelper helper, HimEntity him) {
+        HimRemovalAuthorizer.authorize(him.getUUID());
         him.remove(Entity.RemovalReason.DISCARDED);
         UUID currentHimId = HimLocator.currentHimId(helper.getLevel());
         if (currentHimId != null) {
