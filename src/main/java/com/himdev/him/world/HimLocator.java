@@ -25,7 +25,12 @@ public final class HimLocator {
     }
 
     public static boolean tryRegister(ServerLevel level, UUID himId) {
-        return getData(level).tryRegister(himId);
+        HimSavedData data = getData(level);
+        UUID currentHimId = data.currentHimId();
+        if (currentHimId != null && !currentHimId.equals(himId) && level.getEntity(currentHimId) == null) {
+            data.clear(currentHimId);
+        }
+        return data.tryRegister(himId);
     }
 
     public static void clear(ServerLevel level, UUID himId) {

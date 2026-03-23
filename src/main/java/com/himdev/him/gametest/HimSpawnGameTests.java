@@ -20,6 +20,7 @@ public final class HimSpawnGameTests {
 
     @GameTest(template = "empty", batch = "him_spawn_uniqueness")
     public static void spawningSecondHimDoesNotLeaveTwoInstances(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         HimEntity.spawnForTest(level, helper.absolutePos(BlockPos.ZERO));
         HimEntity.spawnForTest(level, helper.absolutePos(new BlockPos(2, 0, 0)));
@@ -37,6 +38,7 @@ public final class HimSpawnGameTests {
 
     @GameTest(template = "empty", batch = "him_spawn_invulnerability")
     public static void himIgnoresStandardDamage(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
         HimEntity him = HimEntity.spawnForTest(helper.getLevel(), helper.absolutePos(BlockPos.ZERO));
         boolean hurt = him.hurt(helper.getLevel().damageSources().generic(), 1000.0F);
 
@@ -46,6 +48,7 @@ public final class HimSpawnGameTests {
         if (!him.isAlive()) {
             throw new GameTestAssertException("Expected Him to remain alive");
         }
+        him.remove(Entity.RemovalReason.DISCARDED);
         helper.succeed();
     }
 }
