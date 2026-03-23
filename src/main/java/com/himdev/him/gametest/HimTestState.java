@@ -76,6 +76,32 @@ public final class HimTestState {
         level.setBlockAndUpdate(origin.offset(2, 2, 0), Blocks.AIR.defaultBlockState());
     }
 
+    public static void buildObservationArena(GameTestHelper helper, BlockPos origin) {
+        ServerLevel level = helper.getLevel();
+        for (int dx = -6; dx <= 8; dx++) {
+            for (int dz = -6; dz <= 6; dz++) {
+                level.setBlockAndUpdate(origin.offset(dx, -1, dz), Blocks.STONE.defaultBlockState());
+                for (int dy = 0; dy <= 7; dy++) {
+                    level.setBlockAndUpdate(origin.offset(dx, dy, dz), Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
+
+        for (int dy = 0; dy <= 4; dy++) {
+            level.setBlockAndUpdate(origin.offset(4, dy, 0), Blocks.STONE.defaultBlockState());
+        }
+        for (int dx = 3; dx <= 5; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                level.setBlockAndUpdate(origin.offset(dx, 4, dz), Blocks.STONE.defaultBlockState());
+            }
+        }
+        for (int dx = 2; dx <= 6; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                level.setBlockAndUpdate(origin.offset(dx, 5, dz), Blocks.AIR.defaultBlockState());
+            }
+        }
+    }
+
     private static void clearExistenceSeal(GameTestHelper helper) {
         MinecraftServer server = helper.getLevel().getServer();
         if (server == null) {
