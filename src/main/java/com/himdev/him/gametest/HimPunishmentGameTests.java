@@ -10,6 +10,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
@@ -57,6 +59,26 @@ public final class HimPunishmentGameTests {
 
         helper.runAfterDelay(5, () -> {
             helper.assertFalse(zombie.isAlive(), "Expected attacker to be punished");
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "him_punishment_splitters")
+    public static void punishedSlimeLeavesNoSplitOffspring(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        Slime slime = helper.spawn(EntityType.SLIME, 2, 0, 0);
+        slime.setSize(4, true);
+
+        DivinePunisher punisher = new DivinePunisher();
+        punisher.punish(level, slime);
+
+        helper.runAfterDelay(40, () -> {
+            var nearbySlimes = level.getEntitiesOfClass(Slime.class, slime.getBoundingBox().inflate(8.0D), Entity::isAlive);
+            helper.assertTrue(
+                    nearbySlimes.isEmpty(),
+                    "Expected punished slime lineage to be fully cleared, found="
+                            + nearbySlimes.stream().map(entity -> entity.getUUID() + ":size=" + entity.getSize()).toList()
+            );
             helper.succeed();
         });
     }
