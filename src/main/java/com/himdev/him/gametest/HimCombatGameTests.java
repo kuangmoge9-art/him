@@ -4,7 +4,10 @@ import com.himdev.him.HimMod;
 import com.himdev.him.entity.HimEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
@@ -50,6 +53,26 @@ public final class HimCombatGameTests {
             helper.assertTrue(Math.abs(player.getHealth() - player.getMaxHealth()) < 0.01F, "Expected player health to remain untouched");
             him.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
             player.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "him_environment_pursuit")
+    public static void himKeepsPursuitThroughAwkwardTerrain(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        level.setDayTime(18000L);
+        BlockPos origin = helper.absolutePos(BlockPos.ZERO);
+        HimTestState.buildAwkwardPursuitCourse(helper, origin);
+        HimEntity him = HimEntity.spawnForTest(level, origin);
+        Zombie zombie = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+
+        helper.runAfterDelay(40, () -> {
+            if (zombie.isAlive()) {
+                throw new GameTestAssertException("Expected Him to finish pursuit through awkward terrain");
+            }
+            HimTestState.removeHimForTest(helper, him);
+            zombie.remove(Entity.RemovalReason.DISCARDED);
             helper.succeed();
         });
     }

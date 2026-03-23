@@ -4,10 +4,12 @@ import com.himdev.him.entity.HimEntity;
 import com.himdev.him.entity.HimRemovalAuthorizer;
 import com.himdev.him.world.HimExistenceSeal;
 import com.himdev.him.world.HimLocator;
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,11 +50,54 @@ public final class HimTestState {
         clearExistenceSeal(helper);
     }
 
+    public static void buildTightObstruction(GameTestHelper helper, BlockPos origin) {
+        ServerLevel level = helper.getLevel();
+        surroundWithSolidShell(level, origin, false);
+    }
+
+    public static void buildFluidCell(GameTestHelper helper, BlockPos origin) {
+        ServerLevel level = helper.getLevel();
+        surroundWithSolidShell(level, origin, true);
+    }
+
+    public static void buildAwkwardPursuitCourse(GameTestHelper helper, BlockPos origin) {
+        ServerLevel level = helper.getLevel();
+        for (int y = 0; y <= 2; y++) {
+            for (int z = -3; z <= 3; z++) {
+                level.setBlockAndUpdate(origin.offset(1, y, z), Blocks.STONE.defaultBlockState());
+            }
+        }
+        for (int y = 0; y <= 2; y++) {
+            level.setBlockAndUpdate(origin.offset(2, y, -1), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(origin.offset(2, y, 1), Blocks.STONE.defaultBlockState());
+        }
+        level.setBlockAndUpdate(origin.offset(2, 0, 0), Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(origin.offset(2, 1, 0), Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(origin.offset(2, 2, 0), Blocks.AIR.defaultBlockState());
+    }
+
     private static void clearExistenceSeal(GameTestHelper helper) {
         MinecraftServer server = helper.getLevel().getServer();
         if (server == null) {
             return;
         }
         HimExistenceSeal.clear(server);
+    }
+
+    private static void surroundWithSolidShell(ServerLevel level, BlockPos origin, boolean fillWithWater) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = 0; dy <= 2; dy++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    BlockPos current = origin.offset(dx, dy, dz);
+                    boolean isCenter = dx == 0 && dz == 0 && (dy == 0 || dy == 1);
+                    if (isCenter) {
+                        level.setBlockAndUpdate(current, (fillWithWater ? Blocks.WATER : Blocks.AIR).defaultBlockState());
+                    } else {
+                        level.setBlockAndUpdate(current, Blocks.STONE.defaultBlockState());
+                    }
+                }
+            }
+        }
+        level.setBlockAndUpdate(origin.above(3), Blocks.AIR.defaultBlockState());
     }
 }
