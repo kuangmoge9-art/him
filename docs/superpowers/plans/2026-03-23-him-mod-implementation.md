@@ -66,6 +66,7 @@
 - Create: `src/main/resources/assets/him/lang/en_us.json`
 - Create: `src/main/resources/assets/him/textures/entity/him.png`
 - Create: `src/main/resources/assets/him/models/item/him_spawn_egg.json`
+- Create: `src/main/resources/data/him/structures/empty.nbt`
 - Create: `src/main/resources/data/him/damage_type/divine_punishment.json`
 
 ### Tests
@@ -74,11 +75,11 @@
 - Create: `src/test/java/com/himdev/him/guardian/ThreatResolverTest.java`
 - Create: `src/test/java/com/himdev/him/guardian/ThreatResolutionTest.java`
 - Create: `src/test/java/com/himdev/him/world/HimLocatorTest.java`
-- Create: `src/test/java/com/himdev/him/gametest/TestPlayers.java`
-- Create: `src/test/java/com/himdev/him/gametest/HimSpawnGameTests.java`
-- Create: `src/test/java/com/himdev/him/gametest/HimRescueGameTests.java`
-- Create: `src/test/java/com/himdev/him/gametest/HimPunishmentGameTests.java`
-- Create: `src/test/java/com/himdev/him/gametest/HimCombatGameTests.java`
+- Create: `src/main/java/com/himdev/him/gametest/TestPlayers.java`
+- Create: `src/main/java/com/himdev/him/gametest/HimSpawnGameTests.java`
+- Create: `src/main/java/com/himdev/him/gametest/HimRescueGameTests.java`
+- Create: `src/main/java/com/himdev/him/gametest/HimPunishmentGameTests.java`
+- Create: `src/main/java/com/himdev/him/gametest/HimCombatGameTests.java`
 
 ## Task 1: Bootstrap The Forge Project
 
@@ -97,7 +98,7 @@
 
 - [ ] **Step 1: Import the official Forge 1.20.1 MDK skeleton**
 
-Create the minimal Gradle and wrapper files needed to run `runClient`, `runServer`, `test`, and `gameTestServer`.
+Create the minimal Gradle and wrapper files needed to run `runClient`, `runServer`, `test`, and `runGameTestServer`.
 
 - [ ] **Step 2: Write the failing bootstrap test**
 
@@ -247,7 +248,8 @@ git commit -m "test: add threat resolution and unique Him logic"
 - Create: `src/main/resources/assets/him/lang/en_us.json`
 - Create: `src/main/resources/assets/him/textures/entity/him.png`
 - Create: `src/main/resources/assets/him/models/item/him_spawn_egg.json`
-- Create: `src/test/java/com/himdev/him/gametest/HimSpawnGameTests.java`
+- Create: `src/main/resources/data/him/structures/empty.nbt`
+- Create: `src/main/java/com/himdev/him/gametest/HimSpawnGameTests.java`
 
 - [ ] **Step 1: Write the failing GameTest for uniqueness**
 
@@ -283,7 +285,7 @@ public static void himIgnoresStandardDamage(GameTestHelper helper) {
 
 - [ ] **Step 3: Run the GameTests and verify they fail**
 
-Run: `.\gradlew.bat gameTestServer --tests com.himdev.him.gametest.HimSpawnGameTests`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: FAIL because registration and entity classes do not exist yet.
 
@@ -300,7 +302,7 @@ Requirements:
 
 - [ ] **Step 5: Run the GameTests again**
 
-Run: `.\gradlew.bat gameTestServer --tests com.himdev.him.gametest.HimSpawnGameTests`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: PASS
 
@@ -323,8 +325,8 @@ git commit -m "feat: add unique Him entity and spawn egg"
 - Create: `src/main/java/com/himdev/him/guardian/GuardianRescueController.java`
 - Create: `src/main/java/com/himdev/him/registry/HimEffects.java`
 - Create: `src/main/java/com/himdev/him/util/HimLog.java`
-- Create: `src/test/java/com/himdev/him/gametest/TestPlayers.java`
-- Create: `src/test/java/com/himdev/him/gametest/HimRescueGameTests.java`
+- Create: `src/main/java/com/himdev/him/gametest/TestPlayers.java`
+- Create: `src/main/java/com/himdev/him/gametest/HimRescueGameTests.java`
 
 - [ ] **Step 1: Write the failing GameTest for lethal mob rescue**
 
@@ -370,7 +372,7 @@ public static void lethalEnvironmentalDamageDoesNotPunishEntities(GameTestHelper
 
 - [ ] **Step 3: Run the GameTests and verify they fail**
 
-Run: `.\gradlew.bat gameTestServer --tests com.himdev.him.gametest.HimRescueGameTests`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: FAIL because rescue logic and protection effect do not exist yet.
 
@@ -388,14 +390,14 @@ Requirements:
 
 - [ ] **Step 5: Run the GameTests again**
 
-Run: `.\gradlew.bat gameTestServer --tests com.himdev.him.gametest.HimRescueGameTests`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: PASS
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/java/com/himdev/him/guardian/GuardianRescueController.java src/main/java/com/himdev/him/registry/HimEffects.java src/main/java/com/himdev/him/util/HimLog.java src/test/java/com/himdev/him/gametest/TestPlayers.java src/test/java/com/himdev/him/gametest/HimRescueGameTests.java
+git add src/main/java/com/himdev/him/guardian/GuardianRescueController.java src/main/java/com/himdev/him/registry/HimEffects.java src/main/java/com/himdev/him/util/HimLog.java src/main/java/com/himdev/him/gametest/TestPlayers.java src/main/java/com/himdev/him/gametest/HimRescueGameTests.java
 git commit -m "feat: add lethal rescue controller for players"
 ```
 
@@ -406,8 +408,8 @@ git commit -m "feat: add lethal rescue controller for players"
 - Create: `src/main/java/com/himdev/him/guardian/DivinePunisher.java`
 - Modify: `src/main/java/com/himdev/him/guardian/GuardianRescueController.java`
 - Create: `src/main/resources/data/him/damage_type/divine_punishment.json`
-- Create: `src/test/java/com/himdev/him/gametest/HimPunishmentGameTests.java`
-- Modify: `src/test/java/com/himdev/him/gametest/HimRescueGameTests.java`
+- Create: `src/main/java/com/himdev/him/gametest/HimPunishmentGameTests.java`
+- Modify: `src/main/java/com/himdev/him/gametest/HimRescueGameTests.java`
 
 - [ ] **Step 1: Write the failing GameTest for punishment side effects**
 
@@ -452,7 +454,7 @@ public static void lethalMobDamagePunishesAttacker(GameTestHelper helper) {
 
 - [ ] **Step 3: Run the GameTests and verify they fail**
 
-Run: `.\gradlew.bat gameTestServer --tests com.himdev.him.gametest.HimPunishmentGameTests`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: FAIL because the punishment path does not exist yet.
 
@@ -467,14 +469,14 @@ Requirements:
 
 - [ ] **Step 5: Run the GameTests again**
 
-Run: `.\gradlew.bat gameTestServer --tests com.himdev.him.gametest.HimPunishmentGameTests --tests com.himdev.him.gametest.HimRescueGameTests`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: PASS
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/java/com/himdev/him/registry/HimDamageTypes.java src/main/java/com/himdev/him/guardian/DivinePunisher.java src/main/java/com/himdev/him/guardian/GuardianRescueController.java src/main/resources/data/him/damage_type/divine_punishment.json src/test/java/com/himdev/him/gametest/HimPunishmentGameTests.java src/test/java/com/himdev/him/gametest/HimRescueGameTests.java
+git add src/main/java/com/himdev/him/registry/HimDamageTypes.java src/main/java/com/himdev/him/guardian/DivinePunisher.java src/main/java/com/himdev/him/guardian/GuardianRescueController.java src/main/resources/data/him/damage_type/divine_punishment.json src/main/java/com/himdev/him/gametest/HimPunishmentGameTests.java src/main/java/com/himdev/him/gametest/HimRescueGameTests.java
 git commit -m "feat: add divine punishment with normal loot flow"
 ```
 
@@ -485,7 +487,7 @@ git commit -m "feat: add divine punishment with normal loot flow"
 - Create: `src/main/java/com/himdev/him/entity/ai/HimRangedPunishGoal.java`
 - Create: `src/main/java/com/himdev/him/entity/ai/HimMeleePunishGoal.java`
 - Modify: `src/main/java/com/himdev/him/entity/HimEntity.java`
-- Create: `src/test/java/com/himdev/him/gametest/HimCombatGameTests.java`
+- Create: `src/main/java/com/himdev/him/gametest/HimCombatGameTests.java`
 
 - [ ] **Step 1: Write the failing GameTest for hostile targeting**
 
@@ -524,7 +526,7 @@ public static void himNeverTargetsPlayer(GameTestHelper helper) {
 
 - [ ] **Step 3: Run the GameTests and verify they fail**
 
-Run: `.\gradlew.bat gameTestServer --tests com.himdev.him.gametest.HimCombatGameTests`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: FAIL because combat AI does not exist yet.
 
@@ -539,7 +541,7 @@ Requirements:
 
 - [ ] **Step 5: Run the GameTests again**
 
-Run: `.\gradlew.bat gameTestServer --tests com.himdev.him.gametest.HimCombatGameTests`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: PASS
 
@@ -552,7 +554,7 @@ Expected: `Him` is visible, wanders, does not attack players, and attacks hostil
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/main/java/com/himdev/him/entity/HimEntity.java src/main/java/com/himdev/him/entity/ai src/test/java/com/himdev/him/gametest/HimCombatGameTests.java
+git add src/main/java/com/himdev/him/entity/HimEntity.java src/main/java/com/himdev/him/entity/ai src/main/java/com/himdev/him/gametest/HimCombatGameTests.java
 git commit -m "feat: add Him combat behavior"
 ```
 
@@ -584,7 +586,7 @@ Expected: PASS
 
 - [ ] **Step 3: Run the full GameTest suite**
 
-Run: `.\gradlew.bat gameTestServer`
+Run: `.\gradlew.bat runGameTestServer`
 
 Expected: PASS
 
