@@ -2,6 +2,7 @@ package com.himdev.him.client.render;
 
 import com.himdev.him.HimMod;
 import com.himdev.him.client.model.HimModel;
+import com.himdev.him.client.render.layer.HimEyesLayer;
 import com.himdev.him.entity.HimEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -13,6 +14,7 @@ public final class HimRenderer extends MobRenderer<HimEntity, HimModel> {
 
     public HimRenderer(EntityRendererProvider.Context context) {
         super(context, new HimModel(context.bakeLayer(HimModel.LAYER_LOCATION)), 0.5F);
+        this.addLayer(new HimEyesLayer(this));
     }
 
     @Override
