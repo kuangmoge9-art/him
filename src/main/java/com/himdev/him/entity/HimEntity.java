@@ -5,6 +5,7 @@ import com.himdev.him.entity.ai.HimMeleePunishGoal;
 import com.himdev.him.entity.ai.HimRangedPunishGoal;
 import com.himdev.him.guardian.DivinePunisher;
 import com.himdev.him.registry.HimEntityTypes;
+import com.himdev.him.util.HimLog;
 import com.himdev.him.world.HimLocator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -76,7 +77,11 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     public void onAddedToWorld() {
         super.onAddedToWorld();
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel) {
-            if (!HimLocator.tryRegister(serverLevel, getUUID())) {
+            HimLog.info("him spawn_attempt uuid={} pos={}", getUUID(), blockPosition());
+            boolean registered = HimLocator.tryRegister(serverLevel, getUUID());
+            HimLog.info("him uniqueness uuid={} accepted={} current={}", getUUID(), registered, HimLocator.currentHimId(serverLevel));
+            if (!registered) {
+                HimLog.info("him duplicate_discard uuid={}", getUUID());
                 discard();
             }
         }
@@ -85,6 +90,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     @Override
     public void remove(RemovalReason reason) {
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel && reason.shouldDestroy()) {
+            HimLog.info("him removed uuid={} reason={}", getUUID(), reason);
             HimLocator.clear(serverLevel, getUUID());
         }
         super.remove(reason);
