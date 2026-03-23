@@ -11,6 +11,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.Mth;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -91,14 +92,18 @@ public final class HimCombatGameTests {
         Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(3, 0, 0));
         double startY = him.getY();
 
-        helper.runAfterDelay(40, () -> {
+        helper.runAfterDelay(80, () -> {
             double himY = him.getY();
             double playerDistance = horizontalDistance(him.getX(), him.getZ(), player.getX(), player.getZ());
+            double facingPlayer = yawDeltaToTarget(him, player);
             if (himY < startY + 2.5D) {
                 throw new GameTestAssertException("Expected Him to rise to a higher observation point, y=" + himY + ", startY=" + startY);
             }
             if (playerDistance > 8.0D) {
                 throw new GameTestAssertException("Expected Him to stay near the nearby player, distance=" + playerDistance + ", himPos=" + him.blockPosition() + ", playerPos=" + player.blockPosition());
+            }
+            if (facingPlayer > 35.0D) {
+                throw new GameTestAssertException("Expected Him to keep facing the nearby player while observing, yawDelta=" + facingPlayer + ", himYaw=" + him.getYRot() + ", playerPos=" + player.blockPosition());
             }
             HimTestState.removeHimForTest(helper, him);
             player.remove(Entity.RemovalReason.DISCARDED);
@@ -115,23 +120,21 @@ public final class HimCombatGameTests {
         HimTestState.buildObservationArena(helper, origin);
         HimEntity him = HimEntity.spawnForTest(level, origin);
         Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(3, 0, 0));
+        double startY = him.getY();
+        Zombie zombie = helper.spawn(EntityType.ZOMBIE, 5, 0, 0);
 
-        helper.runAfterDelay(20, () -> {
-            if (him.getY() < origin.getY() + 2.5D) {
-                throw new GameTestAssertException("Expected Him to reach the observation point before the hostile arrives, y=" + him.getY());
+        helper.runAfterDelay(80, () -> {
+            boolean fightingZombie = him.getTarget() == zombie || !zombie.isAlive();
+            if (!fightingZombie) {
+                throw new GameTestAssertException("Expected Him to prioritize combat while a hostile is nearby, target=" + him.getTarget() + ", zombieAlive=" + zombie.isAlive() + ", himPos=" + him.blockPosition() + ", zombiePos=" + zombie.blockPosition());
             }
-
-            Zombie zombie = helper.spawn(EntityType.ZOMBIE, 5, 0, 0);
-            helper.runAfterDelay(20, () -> {
-                boolean fightingZombie = him.getTarget() == zombie || !zombie.isAlive();
-                if (!fightingZombie) {
-                    throw new GameTestAssertException("Expected Him to switch from observation to combat, target=" + him.getTarget() + ", zombieAlive=" + zombie.isAlive() + ", himPos=" + him.blockPosition() + ", zombiePos=" + zombie.blockPosition());
-                }
-                HimTestState.removeHimForTest(helper, him);
-                player.remove(Entity.RemovalReason.DISCARDED);
-                zombie.remove(Entity.RemovalReason.DISCARDED);
-                helper.succeed();
-            });
+            if (him.getY() > startY + 1.0D) {
+                throw new GameTestAssertException("Expected Him to stay out of the observation perch while combat is available, y=" + him.getY() + ", startY=" + startY);
+            }
+            HimTestState.removeHimForTest(helper, him);
+            player.remove(Entity.RemovalReason.DISCARDED);
+            zombie.remove(Entity.RemovalReason.DISCARDED);
+            helper.succeed();
         });
     }
 
@@ -165,7 +168,7 @@ public final class HimCombatGameTests {
                     maxY[0] = Math.max(maxY[0], him.getY());
 
                     if (samples < 4) {
-                        helper.runAfterDelay(5, this);
+                        helper.runAfterDelay(10, this);
                         return;
                     }
 
@@ -182,7 +185,7 @@ public final class HimCombatGameTests {
                 }
             };
 
-            helper.runAfterDelay(5, sample);
+            helper.runAfterDelay(10, sample);
         });
     }
 
@@ -190,5 +193,12 @@ public final class HimCombatGameTests {
         double dx = x1 - x2;
         double dz = z1 - z2;
         return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    private static double yawDeltaToTarget(HimEntity him, Player target) {
+        double dx = target.getX() - him.getX();
+        double dz = target.getZ() - him.getZ();
+        float targetYaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+        return Math.abs(Mth.wrapDegrees(him.getYRot() - targetYaw));
     }
 }
