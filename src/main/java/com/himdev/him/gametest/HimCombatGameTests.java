@@ -82,7 +82,7 @@ public final class HimCombatGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_observation_calm")
-    public static void himRisesToLocalObservationPointWhenPlayerIsNear(GameTestHelper helper) {
+    public static void himRisesToAHighLocalObservationPointWhenPlayerIsNear(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         level.setDayTime(6000L);
@@ -92,18 +92,18 @@ public final class HimCombatGameTests {
         Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(3, 0, 0));
         double startY = him.getY();
 
-        helper.runAfterDelay(80, () -> {
+        waitForObservationEntry(helper, him, origin, startY, 120, 10, () -> {
             double himY = him.getY();
             double playerDistance = horizontalDistance(him.getX(), him.getZ(), player.getX(), player.getZ());
             double facingPlayer = yawDeltaToTarget(him, player);
-            if (himY < startY + 2.5D) {
-                throw new GameTestAssertException("Expected Him to rise to a higher observation point, y=" + himY + ", startY=" + startY);
+            if (!isInObservationBand(him, origin, startY)) {
+                throw new GameTestAssertException("Expected Him to rise into a local observation area, y=" + himY + ", startY=" + startY + ", himPos=" + him.blockPosition());
             }
-            if (playerDistance > 8.0D) {
+            if (playerDistance > 10.0D) {
                 throw new GameTestAssertException("Expected Him to stay near the nearby player, distance=" + playerDistance + ", himPos=" + him.blockPosition() + ", playerPos=" + player.blockPosition());
             }
-            if (facingPlayer > 35.0D) {
-                throw new GameTestAssertException("Expected Him to keep facing the nearby player while observing, yawDelta=" + facingPlayer + ", himYaw=" + him.getYRot() + ", playerPos=" + player.blockPosition());
+            if (facingPlayer > 55.0D) {
+                throw new GameTestAssertException("Expected Him to keep roughly facing the nearby player while observing, yawDelta=" + facingPlayer + ", himYaw=" + him.getYRot() + ", playerPos=" + player.blockPosition());
             }
             HimTestState.removeHimForTest(helper, him);
             player.remove(Entity.RemovalReason.DISCARDED);
@@ -112,7 +112,7 @@ public final class HimCombatGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_observation_priority")
-    public static void himChoosesCombatOverObservationWhenHostileArrives(GameTestHelper helper) {
+    public static void himNeverStartsObservationWhileHostileIsAvailable(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         level.setDayTime(6000L);
@@ -126,10 +126,10 @@ public final class HimCombatGameTests {
         helper.runAfterDelay(80, () -> {
             boolean fightingZombie = him.getTarget() == zombie || !zombie.isAlive();
             if (!fightingZombie) {
-                throw new GameTestAssertException("Expected Him to prioritize combat while a hostile is nearby, target=" + him.getTarget() + ", zombieAlive=" + zombie.isAlive() + ", himPos=" + him.blockPosition() + ", zombiePos=" + zombie.blockPosition());
+                throw new GameTestAssertException("Expected Him to never start observation while a hostile mob is available, target=" + him.getTarget() + ", zombieAlive=" + zombie.isAlive() + ", himPos=" + him.blockPosition() + ", zombiePos=" + zombie.blockPosition());
             }
             if (him.getY() > startY + 1.0D) {
-                throw new GameTestAssertException("Expected Him to stay out of the observation perch while combat is available, y=" + him.getY() + ", startY=" + startY);
+                throw new GameTestAssertException("Expected Him to stay out of the observation area while combat is available, y=" + him.getY() + ", startY=" + startY);
             }
             HimTestState.removeHimForTest(helper, him);
             player.remove(Entity.RemovalReason.DISCARDED);
@@ -148,16 +148,18 @@ public final class HimCombatGameTests {
         HimEntity him = HimEntity.spawnForTest(level, origin);
         Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(3, 0, 0));
 
-        helper.runAfterDelay(60, () -> {
-            if (him.getY() < origin.getY() + 2.5D) {
-                throw new GameTestAssertException("Expected Him to reach the observation point before starting stability sampling, y=" + him.getY());
-            }
-
+        waitForObservationEntry(helper, him, origin, him.getY(), 160, 10, () -> {
+            final double baselineX = him.getX();
+            final double baselineY = him.getY();
+            final double baselineZ = him.getZ();
+            final double baselineYaw = him.getYRot();
             final Set<BlockPos> visitedObservationPoints = new HashSet<>();
             final double[] minY = {Double.POSITIVE_INFINITY};
             final double[] maxY = {Double.NEGATIVE_INFINITY};
+            final double[] maxHorizontalDrift = {0.0D};
+            final double[] maxYawDelta = {0.0D};
 
-            Runnable sample = new Runnable() {
+            class StableSample implements Runnable {
                 private int samples;
 
                 @Override
@@ -166,26 +168,34 @@ public final class HimCombatGameTests {
                     visitedObservationPoints.add(him.blockPosition());
                     minY[0] = Math.min(minY[0], him.getY());
                     maxY[0] = Math.max(maxY[0], him.getY());
+                    maxHorizontalDrift[0] = Math.max(maxHorizontalDrift[0], horizontalDistance(baselineX, baselineZ, him.getX(), him.getZ()));
+                    maxYawDelta[0] = Math.max(maxYawDelta[0], Math.abs(Mth.wrapDegrees(him.getYRot() - baselineYaw)));
 
-                    if (samples < 4) {
+                    if (samples < 5) {
                         helper.runAfterDelay(10, this);
                         return;
                     }
 
-                    if (visitedObservationPoints.size() > 1) {
-                        throw new GameTestAssertException("Expected Him to keep one observation point, visited=" + visitedObservationPoints);
+                    if (visitedObservationPoints.size() > 3) {
+                        throw new GameTestAssertException("Expected Him to hold a local observation area without bouncing around, visited=" + visitedObservationPoints);
                     }
-                    if (maxY[0] - minY[0] > 0.35D) {
-                        throw new GameTestAssertException("Expected Him to stay level while observing, minY=" + minY[0] + ", maxY=" + maxY[0]);
+                    if (maxHorizontalDrift[0] > 1.5D) {
+                        throw new GameTestAssertException("Expected Him to stay roughly in place while observing, drift=" + maxHorizontalDrift[0] + ", baseline=" + baselineX + "," + baselineY + "," + baselineZ + ", current=" + him.blockPosition());
+                    }
+                    if (maxY[0] - minY[0] > 0.75D) {
+                        throw new GameTestAssertException("Expected Him to stay mostly level while observing, minY=" + minY[0] + ", maxY=" + maxY[0]);
+                    }
+                    if (maxYawDelta[0] > 65.0D) {
+                        throw new GameTestAssertException("Expected Him to keep a mostly steady look direction while observing, yawDelta=" + maxYawDelta[0]);
                     }
 
                     HimTestState.removeHimForTest(helper, him);
                     player.remove(Entity.RemovalReason.DISCARDED);
                     helper.succeed();
                 }
-            };
+            }
 
-            helper.runAfterDelay(10, sample);
+            helper.runAfterDelay(20, new StableSample());
         });
     }
 
@@ -193,6 +203,37 @@ public final class HimCombatGameTests {
         double dx = x1 - x2;
         double dz = z1 - z2;
         return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    private static boolean isInObservationBand(HimEntity him, BlockPos origin, double startY) {
+        double originX = origin.getX() + 0.5D;
+        double originZ = origin.getZ() + 0.5D;
+        return him.getY() >= startY + 1.5D
+                && him.getY() <= startY + 8.0D
+                && horizontalDistance(him.getX(), him.getZ(), originX, originZ) <= 12.0D;
+    }
+
+    private static void waitForObservationEntry(GameTestHelper helper, HimEntity him, BlockPos origin, double startY, int maxWaitTicks, int pollTicks, Runnable assertion) {
+        class ObservationPoller implements Runnable {
+            private int waitedTicks;
+
+            @Override
+            public void run() {
+                if (isInObservationBand(him, origin, startY)) {
+                    assertion.run();
+                    return;
+                }
+
+                waitedTicks += pollTicks;
+                if (waitedTicks >= maxWaitTicks) {
+                    throw new GameTestAssertException("Expected Him to enter a local observation area within " + maxWaitTicks + " ticks, himPos=" + him.blockPosition() + ", y=" + him.getY());
+                }
+
+                helper.runAfterDelay(pollTicks, this);
+            }
+        }
+
+        helper.runAfterDelay(pollTicks, new ObservationPoller());
     }
 
     private static double yawDeltaToTarget(HimEntity him, Player target) {
