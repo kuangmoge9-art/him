@@ -2,13 +2,13 @@ package com.himdev.him.gametest;
 
 import com.himdev.him.entity.HimEntity;
 import com.himdev.him.entity.HimRemovalAuthorizer;
+import com.himdev.him.world.HimExistenceSeal;
 import com.himdev.him.world.HimLocator;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
@@ -53,15 +53,6 @@ public final class HimTestState {
         if (server == null) {
             return;
         }
-
-        try {
-            Class<?> sealClass = Class.forName("com.himdev.him.world.HimExistenceSeal");
-            Method clearMethod = sealClass.getMethod("clear", MinecraftServer.class);
-            clearMethod.invoke(null, server);
-        } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-            // Task 2 may not be present yet.
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to clear Him existence seal cleanup state", e);
-        }
+        HimExistenceSeal.clear(server);
     }
 }
