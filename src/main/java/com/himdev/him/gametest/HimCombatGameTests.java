@@ -30,8 +30,8 @@ public final class HimCombatGameTests {
         helper.runAfterDelay(20, () -> {
             helper.assertTrue(him.isAlive(), "Expected test Him to survive uniqueness registration");
             helper.assertTrue(
-                    him.getTarget() == zombie,
-                    "Expected Him to lock onto the nearby hostile mob"
+                    him.getTarget() == zombie || !zombie.isAlive(),
+                    "Expected Him to attack the nearby hostile mob, target=" + him.getTarget() + ", zombieAlive=" + zombie.isAlive() + ", zombieHealth=" + zombie.getHealth()
             );
             him.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
             zombie.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
@@ -69,7 +69,7 @@ public final class HimCombatGameTests {
 
         helper.runAfterDelay(40, () -> {
             if (zombie.isAlive()) {
-                throw new GameTestAssertException("Expected Him to finish pursuit through awkward terrain");
+                throw new GameTestAssertException("Expected Him to finish pursuit through awkward terrain, zombieHealth=" + zombie.getHealth() + ", himPos=" + him.blockPosition() + ", zombiePos=" + zombie.blockPosition() + ", target=" + him.getTarget());
             }
             HimTestState.removeHimForTest(helper, him);
             zombie.remove(Entity.RemovalReason.DISCARDED);

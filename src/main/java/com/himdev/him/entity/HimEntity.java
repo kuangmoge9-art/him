@@ -3,6 +3,8 @@ package com.himdev.him.entity;
 import com.himdev.him.entity.ai.HimAttackSelector;
 import com.himdev.him.entity.ai.HimMeleePunishGoal;
 import com.himdev.him.entity.ai.HimRangedPunishGoal;
+import com.himdev.him.entity.movement.HimEnvironmentDominance;
+import com.himdev.him.entity.movement.HimEnvironmentPressureTracker;
 import com.himdev.him.guardian.DivinePunisher;
 import com.himdev.him.registry.HimEntityTypes;
 import com.himdev.him.util.HimLog;
@@ -33,10 +35,12 @@ import java.util.Comparator;
 
 public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final DivinePunisher DIVINE_PUNISHER = new DivinePunisher();
+    private static final HimEnvironmentDominance ENVIRONMENT_DOMINANCE = new HimEnvironmentDominance();
     private static final double VOID_RECOVERY_SPEED = 2.0D;
     private static final int VOID_SAFE_OFFSET = 8;
     private static final int RETURN_STABILIZATION_TICKS = 20;
 
+    private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
     private int returnStabilizationTicks;
     private float returnStabilizationYRot;
     private float returnStabilizationXRot;
@@ -265,6 +269,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             this.setNoGravity(true);
             this.setDeltaMovement(0.0D, 0.0D, 0.0D);
             this.setPos(this.getX(), this.getY() + VOID_RECOVERY_SPEED, this.getZ());
+            environmentPressureTracker.resetAfterCorrection(this);
             return;
         }
 
@@ -273,6 +278,10 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
         if (!isValidCombatTarget(this.getTarget())) {
             this.setTarget(findNearestHostileTarget());
+        }
+        environmentPressureTracker.sample(this);
+        if (ENVIRONMENT_DOMINANCE.applyIfNeeded(this, environmentPressureTracker) && level() instanceof ServerLevel serverLevel) {
+            syncExistenceSeal(serverLevel);
         }
     }
 
