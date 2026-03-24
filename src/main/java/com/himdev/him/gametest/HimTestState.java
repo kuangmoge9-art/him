@@ -54,6 +54,47 @@ public final class HimTestState {
         surroundWithSolidShell(level, origin, true);
     }
 
+    public static BlockPos buildDeepEscapePit(GameTestHelper helper, BlockPos origin) {
+        ServerLevel level = helper.getLevel();
+        buildPitPlatform(level, origin, 4, 4);
+
+        for (int dy = -7; dy <= 6; dy++) {
+            level.setBlockAndUpdate(origin.offset(0, dy, 0), Blocks.AIR.defaultBlockState());
+        }
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) {
+                    continue;
+                }
+                for (int dy = -6; dy <= -1; dy++) {
+                    level.setBlockAndUpdate(origin.offset(dx, dy, dz), Blocks.STONE.defaultBlockState());
+                }
+            }
+        }
+
+        clearAir(level, origin, 2, 6);
+        return origin.offset(2, 0, 0);
+    }
+
+    public static BlockPos buildOffsetEscapePit(GameTestHelper helper, BlockPos origin) {
+        ServerLevel level = helper.getLevel();
+        buildDeepEscapePit(helper, origin);
+
+        for (int dy = -2; dy <= 3; dy++) {
+            level.setBlockAndUpdate(origin.offset(0, dy, 0), Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(origin.offset(1, dy, 0), Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(origin.offset(1, dy, 1), Blocks.AIR.defaultBlockState());
+        }
+
+        for (int dy = -2; dy <= 1; dy++) {
+            level.setBlockAndUpdate(origin.offset(2, dy, 1), Blocks.AIR.defaultBlockState());
+        }
+
+        clearAir(level, origin.offset(1, 0, 1), 2, 5);
+        return origin.offset(2, 0, 1);
+    }
+
     public static BlockPos buildShallowVoidPit(GameTestHelper helper, BlockPos origin) {
         ServerLevel level = helper.getLevel();
         int minBuildHeight = level.getMinBuildHeight();
@@ -133,5 +174,24 @@ public final class HimTestState {
             }
         }
         level.setBlockAndUpdate(origin.above(3), Blocks.AIR.defaultBlockState());
+    }
+
+    private static void buildPitPlatform(ServerLevel level, BlockPos origin, int horizontalRadius, int verticalClearance) {
+        for (int dx = -horizontalRadius; dx <= horizontalRadius; dx++) {
+            for (int dz = -horizontalRadius; dz <= horizontalRadius; dz++) {
+                level.setBlockAndUpdate(origin.offset(dx, -1, dz), Blocks.STONE.defaultBlockState());
+            }
+        }
+        clearAir(level, origin, horizontalRadius, verticalClearance);
+    }
+
+    private static void clearAir(ServerLevel level, BlockPos origin, int horizontalRadius, int height) {
+        for (int dx = -horizontalRadius; dx <= horizontalRadius; dx++) {
+            for (int dz = -horizontalRadius; dz <= horizontalRadius; dz++) {
+                for (int dy = 0; dy <= height; dy++) {
+                    level.setBlockAndUpdate(origin.offset(dx, dy, dz), Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
     }
 }
