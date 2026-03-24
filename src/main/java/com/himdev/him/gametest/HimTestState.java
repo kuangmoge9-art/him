@@ -60,6 +60,28 @@ public final class HimTestState {
         surroundWithSolidShell(level, origin, true);
     }
 
+    public static BlockPos buildShallowVoidPit(GameTestHelper helper, BlockPos origin) {
+        ServerLevel level = helper.getLevel();
+        int minBuildHeight = level.getMinBuildHeight();
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                BlockPos lower = new BlockPos(origin.getX() + dx, minBuildHeight, origin.getZ() + dz);
+                BlockPos upper = lower.above();
+                boolean isCenter = dx == 0 && dz == 0;
+
+                level.setBlockAndUpdate(lower, (isCenter ? Blocks.AIR : Blocks.STONE).defaultBlockState());
+                level.setBlockAndUpdate(upper, (isCenter ? Blocks.AIR : Blocks.STONE).defaultBlockState());
+
+                for (int dy = 2; dy <= 10; dy++) {
+                    level.setBlockAndUpdate(lower.above(dy), Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
+
+        return new BlockPos(origin.getX() + 1, minBuildHeight + 2, origin.getZ());
+    }
+
     public static void buildAwkwardPursuitCourse(GameTestHelper helper, BlockPos origin) {
         ServerLevel level = helper.getLevel();
         for (int y = 0; y <= 2; y++) {

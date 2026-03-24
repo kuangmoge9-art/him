@@ -5,7 +5,6 @@ import com.himdev.him.entity.ai.HimMeleePunishGoal;
 import com.himdev.him.entity.ai.HimRangedPunishGoal;
 import com.himdev.him.entity.movement.HimEnvironmentDominance;
 import com.himdev.him.entity.movement.HimEnvironmentPressureTracker;
-import com.himdev.him.entity.observation.HimObservationDirector;
 import com.himdev.him.guardian.DivinePunisher;
 import com.himdev.him.registry.HimEntityTypes;
 import com.himdev.him.util.HimLog;
@@ -31,6 +30,9 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Comparator;
 
@@ -40,10 +42,25 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final double VOID_RECOVERY_SPEED = 2.0D;
     private static final int VOID_TRIGGER_DEPTH = 4;
     private static final int VOID_SAFE_OFFSET = 8;
+    private static final int VOID_RECOVERY_SEARCH_HEIGHT = 24;
+    private static final int[][] VOID_RECOVERY_SEARCH_OFFSETS = new int[][] {
+            {0, 0},
+            {1, 0},
+            {-1, 0},
+            {0, 1},
+            {0, -1},
+            {1, 1},
+            {1, -1},
+            {-1, 1},
+            {-1, -1},
+            {2, 0},
+            {-2, 0},
+            {0, 2},
+            {0, -2}
+    };
     private static final int RETURN_STABILIZATION_TICKS = 20;
 
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
-    private final HimObservationDirector observationDirector = new HimObservationDirector();
     private boolean recoveringFromVoid;
     private int returnStabilizationTicks;
     private float returnStabilizationYRot;
@@ -270,21 +287,18 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         }
 
         if (shouldRecoverFromVoid()) {
-            observationDirector.stop();
             this.setTarget(null);
             this.setNoGravity(true);
             this.setDeltaMovement(0.0D, 0.0D, 0.0D);
             this.setPos(this.getX(), this.getY() + VOID_RECOVERY_SPEED, this.getZ());
+            if (this.getY() >= this.level().getMinBuildHeight() + VOID_SAFE_OFFSET && finishVoidRecoveryIfPossible()) {
+                this.setNoGravity(false);
+            }
             environmentPressureTracker.resetAfterCorrection(this);
             return;
         }
 
         this.setNoGravity(false);
-        if (level() instanceof ServerLevel serverLevel && observationDirector.tick(serverLevel, this)) {
-            syncExistenceSeal(serverLevel);
-            return;
-        }
-
         super.customServerAiStep();
 
         if (!isValidCombatTarget(this.getTarget())) {
@@ -343,10 +357,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         int minBuildHeight = this.level().getMinBuildHeight();
         if (!recoveringFromVoid && this.getY() < minBuildHeight - VOID_TRIGGER_DEPTH) {
             recoveringFromVoid = true;
-            return;
-        }
-        if (recoveringFromVoid && this.getY() >= minBuildHeight + VOID_SAFE_OFFSET) {
-            recoveringFromVoid = false;
         }
     }
 
@@ -361,5 +371,71 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setYHeadRot(returnStabilizationYRot);
         this.yBodyRot = returnStabilizationYRot;
         this.setDeltaMovement(0.0D, 0.0D, 0.0D);
+    }
+
+    private boolean finishVoidRecoveryIfPossible() {
+        Vec3 landing = findVoidRecoveryLanding();
+        if (landing == null) {
+            return false;
+        }
+
+        this.getNavigation().stop();
+        this.moveTo(landing.x, landing.y, landing.z, this.getYRot(), this.getXRot());
+        this.setDeltaMovement(Vec3.ZERO);
+        this.fallDistance = 0.0F;
+        recoveringFromVoid = false;
+        return true;
+    }
+
+    private Vec3 findVoidRecoveryLanding() {
+        int minBuildHeight = this.level().getMinBuildHeight();
+        BlockPos currentPos = this.blockPosition();
+        int highestFeetY = Math.max(BlockPos.containing(this.getX(), this.getY(), this.getZ()).getY(), minBuildHeight + VOID_SAFE_OFFSET);
+
+        for (int[] offset : VOID_RECOVERY_SEARCH_OFFSETS) {
+            int candidateX = currentPos.getX() + offset[0];
+            int candidateZ = currentPos.getZ() + offset[1];
+            for (int feetY = highestFeetY; feetY >= minBuildHeight; feetY--) {
+                if (highestFeetY - feetY > VOID_RECOVERY_SEARCH_HEIGHT) {
+                    break;
+                }
+
+                BlockPos feet = new BlockPos(candidateX, feetY, candidateZ);
+                if (isSafeVoidRecoveryLanding(feet)) {
+                    return new Vec3(feet.getX() + 0.5D, feet.getY(), feet.getZ() + 0.5D);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isSafeVoidRecoveryLanding(BlockPos feet) {
+        BlockPos head = feet.above();
+        BlockPos floor = feet.below();
+
+        BlockState feetState = this.level().getBlockState(feet);
+        BlockState headState = this.level().getBlockState(head);
+        BlockState floorState = this.level().getBlockState(floor);
+        if (!canOccupyVoidRecoverySpace(feetState) || !canOccupyVoidRecoverySpace(headState)) {
+            return false;
+        }
+        if (feetState.liquid() || headState.liquid()) {
+            return false;
+        }
+        if (floorState.isAir() || floorState.liquid()) {
+            return false;
+        }
+
+        AABB candidateBox = this.getBoundingBox().move(
+                (feet.getX() + 0.5D) - this.getX(),
+                feet.getY() - this.getY(),
+                (feet.getZ() + 0.5D) - this.getZ()
+        );
+        return this.level().noCollision(this, candidateBox);
+    }
+
+    private boolean canOccupyVoidRecoverySpace(BlockState state) {
+        return state.isAir() || state.canBeReplaced();
     }
 }
