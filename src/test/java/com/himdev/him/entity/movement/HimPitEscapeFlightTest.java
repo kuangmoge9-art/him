@@ -7,6 +7,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class HimPitEscapeFlightTest {
     @Test
+    void flightPhaseNeverLeavesDescentOnceDescentStarts() {
+        HimPitEscapeFlight.FlightPhase nextPhase = HimPitEscapeFlight.nextPhaseForPath(
+                new Vec3(2.4D, 1.0D, 1.5D),
+                new Vec3(2.5D, 0.0D, 1.5D),
+                1.5D,
+                HimPitEscapeFlight.FlightPhase.DESCENT
+        );
+
+        assertEquals(HimPitEscapeFlight.FlightPhase.DESCENT, nextPhase);
+    }
+
+    @Test
     void cruisePathIsOnlyUsedForOpenPitEscapes() {
         assertEquals(true, HimPitEscapeFlight.shouldUseCruisePath(true, true));
         assertEquals(false, HimPitEscapeFlight.shouldUseCruisePath(true, false));
@@ -54,7 +66,15 @@ class HimPitEscapeFlightTest {
         Vec3 current = new Vec3(2.5D, 1.0D, 1.5D);
         Vec3 landing = new Vec3(2.5D, 0.0D, 1.5D);
 
-        Vec3 next = HimPitEscapeFlight.nextStepForPhasedPath(current, landing, 1.5D, 0.8D, 0.45D, 0.5D);
+        Vec3 next = HimPitEscapeFlight.nextStepForPhase(
+                current,
+                landing,
+                1.5D,
+                HimPitEscapeFlight.FlightPhase.DESCENT,
+                0.8D,
+                0.45D,
+                0.5D
+        );
 
         assertEquals(2.5D, next.x, 1.0E-9D);
         assertEquals(0.5D, next.y, 1.0E-9D);

@@ -65,6 +65,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
     private Vec3 pitEscapeLanding;
     private boolean pitEscapeUsesCruisePath;
+    private double pitEscapeCruiseY;
+    private HimPitEscapeFlight.FlightPhase pitEscapePhase;
     private int pitEscapeTicksRemaining;
     private int pitEscapeCooldownTicks;
     private boolean recoveringFromVoid;
@@ -503,7 +505,18 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             return true;
         }
 
-        Vec3 nextStep = PIT_ESCAPE_FLIGHT.nextStep(serverLevel, this, pitEscapeLanding, pitEscapeUsesCruisePath);
+        if (pitEscapeUsesCruisePath && pitEscapePhase != null) {
+            pitEscapePhase = PIT_ESCAPE_FLIGHT.nextPhaseForPath(this.position(), pitEscapeLanding, pitEscapeCruiseY, pitEscapePhase);
+        }
+
+        Vec3 nextStep = PIT_ESCAPE_FLIGHT.nextStep(
+                serverLevel,
+                this,
+                pitEscapeLanding,
+                pitEscapeUsesCruisePath,
+                pitEscapeCruiseY,
+                pitEscapePhase
+        );
         this.setDeltaMovement(nextStep.subtract(this.position()));
         this.moveTo(nextStep.x, nextStep.y, nextStep.z, this.getYRot(), this.getXRot());
 
@@ -527,6 +540,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private void startPitEscapeFlight(ServerLevel serverLevel, Vec3 landing) {
         pitEscapeLanding = landing;
         pitEscapeUsesCruisePath = PIT_ESCAPE_FLIGHT.shouldUseCruisePath(serverLevel, this, landing);
+        pitEscapeCruiseY = pitEscapeUsesCruisePath ? PIT_ESCAPE_FLIGHT.selectCruiseHeight(serverLevel, this, landing) : landing.y;
+        pitEscapePhase = pitEscapeUsesCruisePath ? HimPitEscapeFlight.FlightPhase.ASCENT : null;
         pitEscapeTicksRemaining = PIT_ESCAPE_MAX_TICKS;
         this.setNoGravity(true);
         this.setDeltaMovement(Vec3.ZERO);
@@ -535,6 +550,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private void stopPitEscapeFlight() {
         pitEscapeLanding = null;
         pitEscapeUsesCruisePath = false;
+        pitEscapeCruiseY = 0.0D;
+        pitEscapePhase = null;
         pitEscapeTicksRemaining = 0;
         pitEscapeCooldownTicks = PIT_ESCAPE_COOLDOWN_TICKS;
         this.setNoGravity(false);

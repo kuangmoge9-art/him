@@ -9,6 +9,12 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public final class HimPitEscapeFlight {
+    public enum FlightPhase {
+        ASCENT,
+        CRUISE,
+        DESCENT
+    }
+
     private static final int SEARCH_RADIUS = 4;
     private static final int SEARCH_HEIGHT = 12;
     private static final int CRUISE_HEIGHT_SEARCH_STEPS = 6;
@@ -79,31 +85,63 @@ public final class HimPitEscapeFlight {
         return pitLikeTrap && clearVerticalAscent;
     }
 
-    public Vec3 nextStep(ServerLevel level, HimEntity him, Vec3 landing, boolean useCruisePath) {
+    public double selectCruiseHeight(ServerLevel level, HimEntity him, Vec3 landing) {
+        Vec3 current = him.position();
+        for (int extraHeight = 0; extraHeight <= CRUISE_HEIGHT_SEARCH_STEPS; extraHeight++) {
+            double cruiseY = Math.max(current.y, landing.y + CRUISE_HEIGHT_ABOVE_LANDING + extraHeight);
+            if (hasClearVerticalAscent(level, him, current, cruiseY)) {
+                return cruiseY;
+            }
+        }
+        return Math.max(current.y, landing.y + CRUISE_HEIGHT_ABOVE_LANDING);
+    }
+
+    public Vec3 nextStep(ServerLevel level, HimEntity him, Vec3 landing, boolean useCruisePath,
+                         double cruiseY, FlightPhase phase) {
         Vec3 current = him.position();
         if (!useCruisePath) {
             return directNextStep(current, landing, DIRECT_FLIGHT_SPEED);
         }
 
-        for (int extraHeight = 0; extraHeight <= CRUISE_HEIGHT_SEARCH_STEPS; extraHeight++) {
-            double cruiseY = Math.max(current.y, landing.y + CRUISE_HEIGHT_ABOVE_LANDING + extraHeight);
-            Vec3 next = nextStepForPhasedPath(current, landing, cruiseY, ASCENT_SPEED, CRUISE_SPEED, DESCENT_SPEED);
-            if (isCollisionFree(level, him, next)) {
-                return next;
-            }
+        Vec3 next = nextStepForPhase(current, landing, cruiseY, phase, ASCENT_SPEED, CRUISE_SPEED, DESCENT_SPEED);
+        if (isCollisionFree(level, him, next)) {
+            return next;
         }
         return current;
     }
 
+    public static FlightPhase nextPhaseForPath(Vec3 current, Vec3 landing, double cruiseY, FlightPhase currentPhase) {
+        if (currentPhase == FlightPhase.DESCENT) {
+            return FlightPhase.DESCENT;
+        }
+
+        double dx = landing.x - current.x;
+        double dz = landing.z - current.z;
+        boolean horizontallyAligned = (dx * dx) + (dz * dz) <= HORIZONTAL_ALIGNMENT_REACHED_SQR;
+        if (currentPhase == FlightPhase.ASCENT && current.y + CRUISE_HEIGHT_EPSILON < cruiseY) {
+            return FlightPhase.ASCENT;
+        }
+        if (!horizontallyAligned) {
+            return FlightPhase.CRUISE;
+        }
+        return FlightPhase.DESCENT;
+    }
+
     static Vec3 nextStepForPhasedPath(Vec3 current, Vec3 landing, double cruiseY,
                                       double ascentSpeed, double cruiseSpeed, double descentSpeed) {
-        Vec3 stageTarget = resolveStageTarget(current, landing, cruiseY);
+        FlightPhase phase = inferPhaseForPath(current, landing, cruiseY);
+        return nextStepForPhase(current, landing, cruiseY, phase, ascentSpeed, cruiseSpeed, descentSpeed);
+    }
+
+    static Vec3 nextStepForPhase(Vec3 current, Vec3 landing, double cruiseY, FlightPhase phase,
+                                 double ascentSpeed, double cruiseSpeed, double descentSpeed) {
+        Vec3 stageTarget = resolveStageTarget(current, landing, cruiseY, phase);
         Vec3 delta = stageTarget.subtract(current);
         if (delta.lengthSqr() <= LANDING_REACHED_SQR) {
             return stageTarget;
         }
 
-        double speed = movementSpeedForStage(current, landing, cruiseY, ascentSpeed, cruiseSpeed, descentSpeed);
+        double speed = movementSpeedForPhase(phase, ascentSpeed, cruiseSpeed, descentSpeed);
         Vec3 direction = delta.normalize().scale(Math.min(speed, delta.length()));
         return current.add(direction);
     }
@@ -161,36 +199,38 @@ public final class HimPitEscapeFlight {
         return level.noCollision(him, candidateBox);
     }
 
-    private static Vec3 resolveStageTarget(Vec3 current, Vec3 landing, double cruiseY) {
-        double effectiveCruiseY = Math.max(cruiseY, landing.y);
+    private static FlightPhase inferPhaseForPath(Vec3 current, Vec3 landing, double cruiseY) {
+        if (current.y + CRUISE_HEIGHT_EPSILON < cruiseY) {
+            return FlightPhase.ASCENT;
+        }
+
         double dx = landing.x - current.x;
         double dz = landing.z - current.z;
-        boolean horizontallyAligned = (dx * dx) + (dz * dz) <= HORIZONTAL_ALIGNMENT_REACHED_SQR;
-        if (!horizontallyAligned && current.y + CRUISE_HEIGHT_EPSILON < effectiveCruiseY) {
-            return new Vec3(current.x, effectiveCruiseY, current.z);
+        if ((dx * dx) + (dz * dz) > HORIZONTAL_ALIGNMENT_REACHED_SQR) {
+            return FlightPhase.CRUISE;
         }
 
-        if (!horizontallyAligned) {
-            return new Vec3(landing.x, Math.max(current.y, effectiveCruiseY), landing.z);
-        }
+        return FlightPhase.DESCENT;
+    }
 
+    private static Vec3 resolveStageTarget(Vec3 current, Vec3 landing, double cruiseY, FlightPhase phase) {
+        if (phase == FlightPhase.ASCENT) {
+            return new Vec3(current.x, cruiseY, current.z);
+        }
+        if (phase == FlightPhase.CRUISE) {
+            return new Vec3(landing.x, Math.max(current.y, cruiseY), landing.z);
+        }
         return landing;
     }
 
-    private static double movementSpeedForStage(Vec3 current, Vec3 landing, double cruiseY,
+    private static double movementSpeedForPhase(FlightPhase phase,
                                                 double ascentSpeed, double cruiseSpeed, double descentSpeed) {
-        double effectiveCruiseY = Math.max(cruiseY, landing.y);
-        double dx = landing.x - current.x;
-        double dz = landing.z - current.z;
-        boolean horizontallyAligned = (dx * dx) + (dz * dz) <= HORIZONTAL_ALIGNMENT_REACHED_SQR;
-        if (!horizontallyAligned && current.y + CRUISE_HEIGHT_EPSILON < effectiveCruiseY) {
+        if (phase == FlightPhase.ASCENT) {
             return ascentSpeed;
         }
-
-        if (!horizontallyAligned) {
+        if (phase == FlightPhase.CRUISE) {
             return cruiseSpeed;
         }
-
         return descentSpeed;
     }
 
