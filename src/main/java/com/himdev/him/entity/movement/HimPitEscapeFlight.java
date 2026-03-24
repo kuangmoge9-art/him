@@ -163,13 +163,14 @@ public final class HimPitEscapeFlight {
 
     private static Vec3 resolveStageTarget(Vec3 current, Vec3 landing, double cruiseY) {
         double effectiveCruiseY = Math.max(cruiseY, landing.y);
-        if (current.y + CRUISE_HEIGHT_EPSILON < effectiveCruiseY) {
+        double dx = landing.x - current.x;
+        double dz = landing.z - current.z;
+        boolean horizontallyAligned = (dx * dx) + (dz * dz) <= HORIZONTAL_ALIGNMENT_REACHED_SQR;
+        if (!horizontallyAligned && current.y + CRUISE_HEIGHT_EPSILON < effectiveCruiseY) {
             return new Vec3(current.x, effectiveCruiseY, current.z);
         }
 
-        double dx = landing.x - current.x;
-        double dz = landing.z - current.z;
-        if ((dx * dx) + (dz * dz) > HORIZONTAL_ALIGNMENT_REACHED_SQR) {
+        if (!horizontallyAligned) {
             return new Vec3(landing.x, Math.max(current.y, effectiveCruiseY), landing.z);
         }
 
@@ -179,13 +180,14 @@ public final class HimPitEscapeFlight {
     private static double movementSpeedForStage(Vec3 current, Vec3 landing, double cruiseY,
                                                 double ascentSpeed, double cruiseSpeed, double descentSpeed) {
         double effectiveCruiseY = Math.max(cruiseY, landing.y);
-        if (current.y + CRUISE_HEIGHT_EPSILON < effectiveCruiseY) {
+        double dx = landing.x - current.x;
+        double dz = landing.z - current.z;
+        boolean horizontallyAligned = (dx * dx) + (dz * dz) <= HORIZONTAL_ALIGNMENT_REACHED_SQR;
+        if (!horizontallyAligned && current.y + CRUISE_HEIGHT_EPSILON < effectiveCruiseY) {
             return ascentSpeed;
         }
 
-        double dx = landing.x - current.x;
-        double dz = landing.z - current.z;
-        if ((dx * dx) + (dz * dz) > HORIZONTAL_ALIGNMENT_REACHED_SQR) {
+        if (!horizontallyAligned) {
             return cruiseSpeed;
         }
 
