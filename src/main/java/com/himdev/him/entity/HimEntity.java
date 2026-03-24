@@ -8,7 +8,6 @@ import com.himdev.him.entity.movement.HimEnvironmentPressureTracker;
 import com.himdev.him.guardian.DivinePunisher;
 import com.himdev.him.registry.HimEntityTypes;
 import com.himdev.him.util.HimLog;
-import com.himdev.him.world.HimExistenceSeal;
 import com.himdev.him.world.HimLocator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -58,13 +57,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             {0, 2},
             {0, -2}
     };
-    private static final int RETURN_STABILIZATION_TICKS = 20;
-
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
     private boolean recoveringFromVoid;
-    private int returnStabilizationTicks;
-    private float returnStabilizationYRot;
-    private float returnStabilizationXRot;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -87,18 +81,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         him.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
         level.addFreshEntity(him);
         return him;
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-        if (!level().isClientSide && returnStabilizationTicks > 0) {
-            this.setDeltaMovement(0.0D, 0.0D, 0.0D);
-            this.setYRot(returnStabilizationYRot);
-            this.setYHeadRot(returnStabilizationYRot);
-            this.yBodyRot = returnStabilizationYRot;
-            this.setXRot(returnStabilizationXRot);
-        }
     }
 
     @Override
@@ -131,9 +113,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
                 HimLog.info("him duplicate_discard uuid={}", getUUID());
                 HimRemovalAuthorizer.authorize(getUUID());
                 discard();
-                return;
             }
-            syncExistenceSeal(serverLevel);
         }
     }
 
@@ -151,8 +131,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             }
 
             if (level() instanceof ServerLevel serverLevel) {
-                syncExistenceSeal(serverLevel);
-                HimExistenceSeal.prepareAuthorizedRemoval(serverLevel, this);
                 HimLog.info("him removed uuid={} reason={}", getUUID(), reason);
                 HimLocator.clear(serverLevel, getUUID());
             }
@@ -268,24 +246,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.fallDistance = 0.0F;
         updateVoidRecoveryState();
 
-        if (returnStabilizationTicks > 0) {
-            returnStabilizationTicks--;
-            this.setNoGravity(false);
-            this.setDeltaMovement(0.0D, 0.0D, 0.0D);
-            this.setYRot(returnStabilizationYRot);
-            this.setYHeadRot(returnStabilizationYRot);
-            this.yBodyRot = returnStabilizationYRot;
-            this.setXRot(returnStabilizationXRot);
-            if (level() instanceof ServerLevel serverLevel) {
-                syncExistenceSeal(serverLevel);
-            }
-            return;
-        }
-
-        if (level() instanceof ServerLevel serverLevel) {
-            syncExistenceSeal(serverLevel);
-        }
-
         if (shouldRecoverFromVoid()) {
             this.setTarget(null);
             this.setNoGravity(true);
@@ -305,9 +265,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             this.setTarget(findNearestHostileTarget());
         }
         environmentPressureTracker.sample(this);
-        if (ENVIRONMENT_DOMINANCE.applyIfNeeded(this, environmentPressureTracker) && level() instanceof ServerLevel serverLevel) {
-            syncExistenceSeal(serverLevel);
-        }
+        ENVIRONMENT_DOMINANCE.applyIfNeeded(this, environmentPressureTracker);
     }
 
     @Override
@@ -337,10 +295,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         return recoveringFromVoid;
     }
 
-    public boolean isReturnStabilizing() {
-        return returnStabilizationTicks > 0;
-    }
-
     public boolean hasAvailableHostileTarget() {
         return isValidCombatTarget(this.getTarget()) || findNearestHostileTarget() != null;
     }
@@ -358,19 +312,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         if (!recoveringFromVoid && this.getY() < minBuildHeight - VOID_TRIGGER_DEPTH) {
             recoveringFromVoid = true;
         }
-    }
-
-    private void syncExistenceSeal(ServerLevel serverLevel) {
-        HimExistenceSeal.update(serverLevel.getServer(), serverLevel.dimension(), this.getX(), this.getY(), this.getZ(), this.getYRot(), this.getXRot());
-    }
-
-    public void stabilizeAfterReturn() {
-        this.returnStabilizationTicks = RETURN_STABILIZATION_TICKS;
-        this.returnStabilizationYRot = this.getYRot();
-        this.returnStabilizationXRot = this.getXRot();
-        this.setYHeadRot(returnStabilizationYRot);
-        this.yBodyRot = returnStabilizationYRot;
-        this.setDeltaMovement(0.0D, 0.0D, 0.0D);
     }
 
     private boolean finishVoidRecoveryIfPossible() {

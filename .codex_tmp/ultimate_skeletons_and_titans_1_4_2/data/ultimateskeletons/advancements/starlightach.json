@@ -1,0 +1,23 @@
+{
+  "display": {
+    "background": "minecraft:textures/block/stone.png",
+    "icon": {
+      "item": "ultimateskeletons:spawnstarriverskeleton"
+    },
+    "title": {
+      "translate": "advancements.starlightach.title"
+    },
+    "description": {
+      "translate": "advancements.starlightach.descr"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "starlightach_0": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

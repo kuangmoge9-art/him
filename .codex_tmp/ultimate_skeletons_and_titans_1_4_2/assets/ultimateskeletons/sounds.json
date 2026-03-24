@@ -1,0 +1,986 @@
+{
+  "swing": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titanswing",
+        "stream": false
+      }
+    ]
+  },
+  "lightningshouter": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:jzaharpowerchant",
+        "stream": false
+      }
+    ]
+  },
+  "summonappearance": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:quickapperence",
+        "stream": false
+      }
+    ]
+  },
+  "ultimatedeathlaser": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:zhong_ji_po_pi_guang_",
+        "stream": false
+      }
+    ]
+  },
+  "jianxiaoguang": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:jian_xiao_guang_shu_chao_duan_",
+        "stream": false
+      }
+    ]
+  },
+  "chain": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:yu_zhou_e_ling_suo_lian_",
+        "stream": false
+      }
+    ]
+  },
+  "deathultra": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:235108955-1-16",
+        "stream": false
+      }
+    ]
+  },
+  "spawn": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:witherzillaspawn",
+        "stream": false
+      }
+    ]
+  },
+  "strike": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titanstrike",
+        "stream": false
+      }
+    ]
+  },
+  "fall": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titanfall",
+        "stream": false
+      }
+    ]
+  },
+  "lightningthrow": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:lightningthrow",
+        "stream": false
+      }
+    ]
+  },
+  "crushland": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titanland",
+        "stream": false
+      }
+    ]
+  },
+  "ultimateroar": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:voice-2023-04-03-21-28",
+        "stream": false
+      }
+    ]
+  },
+  "thunderstorm": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:thunder1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:thunder2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:thunder3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:thunder4",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:thunder5",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:thunder6",
+        "stream": false
+      }
+    ]
+  },
+  "flashcut": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:slashflesh",
+        "stream": false
+      }
+    ]
+  },
+  "witherskeletonshouter": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantwitherskeleton1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantwitherskeleton2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantwitherskeleton3",
+        "stream": false
+      }
+    ]
+  },
+  "starbgm": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:ivan_torrent_-_human_legacy",
+        "stream": false
+      }
+    ]
+  },
+  "death": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:brand_x_music_-_dogs_of_war",
+        "stream": false
+      }
+    ]
+  },
+  "kanji": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:kan_ji_",
+        "stream": false
+      }
+    ]
+  },
+  "huiwuqiliu": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:hui_wu_qi_liu_",
+        "stream": false
+      }
+    ]
+  },
+  "huidong": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:hui_dong_",
+        "stream": false
+      }
+    ]
+  },
+  "pili": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:pi_li_",
+        "stream": false
+      }
+    ]
+  },
+  "tiaozhan": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:tiao_zhan_xia_luo_",
+        "stream": false
+      }
+    ]
+  },
+  "angrybeginning": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:12yue_22ri_",
+        "stream": false
+      }
+    ]
+  },
+  "crit": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:crit",
+        "stream": false
+      }
+    ]
+  },
+  "angryroar": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:angryroar",
+        "stream": false
+      }
+    ]
+  },
+  "starlightsummon": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:zhao_huan_",
+        "stream": false
+      }
+    ]
+  },
+  "witherskeletontitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantwitherskeleton1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantwitherskeleton2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantwitherskeleton3",
+        "stream": false
+      }
+    ]
+  },
+  "witherskeletontitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantwitherskeletonhurt1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantwitherskeletonhurt2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantwitherskeletonhurt3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantwitherskeletonhurt4",
+        "stream": false
+      }
+    ]
+  },
+  "witherskeletontitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantwitherskeletondeath",
+        "stream": false
+      }
+    ]
+  },
+  "titanstep": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titanstep1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:titanstep2",
+        "stream": false
+      }
+    ]
+  },
+  "skeletontitanawaken": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:skeletontitanawaken",
+        "stream": false
+      }
+    ]
+  },
+  "skeletontitanbeginmove": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:skeletontitanbeginmove",
+        "stream": false
+      }
+    ]
+  },
+  "skeletontitangetup": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:skeletontitangetup",
+        "stream": false
+      }
+    ]
+  },
+  "titanquake": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titanquake",
+        "stream": false
+      }
+    ]
+  },
+  "press": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titanpress1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:titanpress2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:titanpress3",
+        "stream": false
+      }
+    ]
+  },
+  "sworddrag": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:sworddrag",
+        "stream": false
+      }
+    ]
+  },
+  "titancreation": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titancreation",
+        "stream": false
+      }
+    ]
+  },
+  "danger": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:danger",
+        "stream": false
+      }
+    ]
+  },
+  "skeletontitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantskeleton1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantskeleton2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantskeleton3",
+        "stream": false
+      }
+    ]
+  },
+  "skeletontitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantskeletonhurt1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantskeletonhurt2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantskeletonhurt3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantskeletonhurt4",
+        "stream": false
+      }
+    ]
+  },
+  "skeletontitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantskeletondeath",
+        "stream": false
+      }
+    ]
+  },
+  "endermantitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:endercolossusliving1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:endercolossusliving2",
+        "stream": false
+      }
+    ]
+  },
+  "endermantitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:endercolossusgrunt1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:endercolossusgrunt2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:endercolossusgrunt3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:endercolossusgrunt4",
+        "stream": false
+      }
+    ]
+  },
+  "endermantitanroar": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:endercolossusroar",
+        "stream": false
+      }
+    ]
+  },
+  "endermantitanscream": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:endercolossusscreamlong",
+        "stream": false
+      }
+    ]
+  },
+  "endermantitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:endercolossusdeath",
+        "stream": false
+      }
+    ]
+  },
+  "creepertitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantcreeperliving1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantcreeperliving2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantcreeperliving3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantcreeperliving4",
+        "stream": false
+      }
+    ]
+  },
+  "creepertitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantcreeperhurt1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantcreeperhurt2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantcreeperhurt3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantcreeperhurt4",
+        "stream": false
+      }
+    ]
+  },
+  "creepertitangetup": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:creepertitangetup",
+        "stream": false
+      }
+    ]
+  },
+  "creepertitanawaken": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:creepertitanawaken",
+        "stream": false
+      }
+    ]
+  },
+  "creepertitanexplosion": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:creepertitanexplosion",
+        "stream": false
+      }
+    ]
+  },
+  "creepertitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantcreeperdeath",
+        "stream": false
+      }
+    ]
+  },
+  "creepertitanwarning": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:creepertitanwarning",
+        "stream": false
+      }
+    ]
+  },
+  "spidertitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantspiderliving1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantspiderliving2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantspiderliving3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantspiderliving4",
+        "stream": false
+      }
+    ]
+  },
+  "spidertitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantspidergrunt1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantspidergrunt2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantspidergrunt3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantspidergrunt4",
+        "stream": false
+      }
+    ]
+  },
+  "spidertitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantspiderdeath",
+        "stream": false
+      }
+    ]
+  },
+  "ghasttitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:ghasttitanmoan1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanmoan2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanmoan3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanmoan4",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanmoan5",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanmoan6",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanmoan7",
+        "stream": false
+      }
+    ]
+  },
+  "ghasttitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:ghasttitanscream1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanscream2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanscream3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanscream4",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:ghasttitanscream5",
+        "stream": false
+      }
+    ]
+  },
+  "ghasttitanfireball": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:ghasttitanfireball",
+        "stream": false
+      }
+    ]
+  },
+  "ghasttitancharge": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:ghasttitancharge",
+        "stream": false
+      }
+    ]
+  },
+  "ghasttitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:ghasttitandeath",
+        "stream": false
+      }
+    ]
+  },
+  "void": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:harcadiumhum",
+        "stream": false
+      }
+    ]
+  },
+  "blazetitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:blazetitanbreathe1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:blazetitanbreathe2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:blazetitanbreathe3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:blazetitanbreathe4",
+        "stream": false
+      }
+    ]
+  },
+  "blazetitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:blazetitangrunt1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:blazetitangrunt2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:blazetitangrunt3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:blazetitangrunt4",
+        "stream": false
+      }
+    ]
+  },
+  "blazetitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:blazetitandeath",
+        "stream": false
+      }
+    ]
+  },
+  "titanpunch": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:titanpunch1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:titanpunch2",
+        "stream": false
+      }
+    ]
+  },
+  "laser": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:ji_guang_weng_ming_",
+        "stream": false
+      }
+    ]
+  },
+  "zombietitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:zombietitanexist1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist4",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist5",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist6",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist7",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist8",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist9",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitanexist10",
+        "stream": false
+      }
+    ]
+  },
+  "zombietitanspawn": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:zombietitancreation",
+        "stream": false
+      }
+    ]
+  },
+  "zombietitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:zombietitangrunt1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt4",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt5",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt6",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt7",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt8",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt9",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt10",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt11",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:zombietitangrunt12",
+        "stream": false
+      }
+    ]
+  },
+  "zombietitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:zombietitandeath",
+        "stream": false
+      }
+    ]
+  },
+  "zombietitanroar": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:zombietitanroar",
+        "stream": false
+      }
+    ]
+  },
+  "musamu": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:musmussusoloc",
+        "stream": false
+      }
+    ]
+  },
+  "pigzombietitanidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantzombiepigman1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantzombiepigman2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantzombiepigman3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantzombiepigman4",
+        "stream": false
+      }
+    ]
+  },
+  "pigzombietitanhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantzombiepigmangrunt1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:giantzombiepigmangrunt2",
+        "stream": false
+      }
+    ]
+  },
+  "pigzombietitandeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:giantzombiepigmandeath",
+        "stream": false
+      }
+    ]
+  },
+  "lightningcharge": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:lightningcharge",
+        "stream": false
+      }
+    ]
+  },
+  "omegafishidle": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:squeak1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:squeak2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:squeak3",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:squeak4",
+        "stream": false
+      }
+    ]
+  },
+  "omegafishhurt": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:hitsqueak1",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:hitsqueak2",
+        "stream": false
+      },
+      {
+        "name": "ultimateskeletons:hitsqueak3",
+        "stream": false
+      }
+    ]
+  },
+  "omegafishdeath": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:deathsqueak",
+        "stream": false
+      }
+    ]
+  },
+  "groundsmash": {
+    "sounds": [
+      {
+        "name": "ultimateskeletons:groundsmash",
+        "stream": false
+      }
+    ]
+  }
+}

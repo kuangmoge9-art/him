@@ -1,0 +1,81 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.ball": {
+			"animation_length": 4.75,
+			"bones": {
+				"hexadecagon": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"4.75": {
+							"vector": [0, -1800, 0]
+						}
+					},
+					"scale": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [2, 2, 2],
+							"easing": "easeOutQuad"
+						}
+					}
+				},
+				"hexadecagon2": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"4.75": {
+							"vector": [0, 1800, 0]
+						}
+					},
+					"scale": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [1, 1, 1],
+							"easing": "easeOutQuad"
+						}
+					}
+				}
+			}
+		},
+		"animation.explosion": {
+			"animation_length": 1.5,
+			"bones": {
+				"hexadecagon": {
+					"scale": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [48, 48, 48],
+							"easing": "easeOutQuad"
+						}
+					}
+				},
+				"hexadecagon2": {
+					"scale": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"1.5": {
+							"vector": [24, 24, 24],
+							"easing": "easeOutQuad"
+						}
+					}
+				},
+				"bone": {
+					"position": {
+						"vector": [0, -24, 0]
+					}
+				}
+			}
+		}
+	},
+	"geckolib_format_version": 2
+}

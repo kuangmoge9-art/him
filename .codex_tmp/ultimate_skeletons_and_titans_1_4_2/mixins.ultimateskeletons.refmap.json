@@ -1,0 +1,36 @@
+{
+  "mappings": {
+    "net/mcreator/ultimateskeletons/mixins/SetremovedMixin": {
+      "tickDeath": "Lnet/minecraft/world/entity/LivingEntity;m_6153_()V"
+    },
+    "net/mcreator/ultimateskeletons/mixins/MinecraftMixin": {
+      "Lnet/minecraft/client/Minecraft;getSituationalMusic()Lnet/minecraft/sounds/Music;": "Lnet/minecraft/client/Minecraft;m_91107_()Lnet/minecraft/sounds/Music;"
+    },
+    "net/mcreator/ultimateskeletons/mixins/BossEventAccessorMixin": {
+      "id": "f_18847_:Ljava/util/UUID;"
+    },
+    "net/mcreator/ultimateskeletons/mixins/EntitysMixin": {
+      "isRemoved": "Lnet/minecraft/world/entity/Entity;m_213877_()Z",
+      "setPosRaw": "Lnet/minecraft/world/entity/Entity;m_20343_(DDD)V",
+      "setRemoved": "Lnet/minecraft/world/entity/Entity;m_142467_(Lnet/minecraft/world/entity/Entity$RemovalReason;)V"
+    }
+  },
+  "data": {
+    "searge": {
+      "net/mcreator/ultimateskeletons/mixins/SetremovedMixin": {
+        "tickDeath": "Lnet/minecraft/world/entity/LivingEntity;m_6153_()V"
+      },
+      "net/mcreator/ultimateskeletons/mixins/MinecraftMixin": {
+        "Lnet/minecraft/client/Minecraft;getSituationalMusic()Lnet/minecraft/sounds/Music;": "Lnet/minecraft/client/Minecraft;m_91107_()Lnet/minecraft/sounds/Music;"
+      },
+      "net/mcreator/ultimateskeletons/mixins/BossEventAccessorMixin": {
+        "id": "f_18847_:Ljava/util/UUID;"
+      },
+      "net/mcreator/ultimateskeletons/mixins/EntitysMixin": {
+        "isRemoved": "Lnet/minecraft/world/entity/Entity;m_213877_()Z",
+        "setPosRaw": "Lnet/minecraft/world/entity/Entity;m_20343_(DDD)V",
+        "setRemoved": "Lnet/minecraft/world/entity/Entity;m_142467_(Lnet/minecraft/world/entity/Entity$RemovalReason;)V"
+      }
+    }
+  }
+}

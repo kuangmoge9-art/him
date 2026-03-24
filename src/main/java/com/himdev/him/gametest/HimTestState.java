@@ -2,11 +2,9 @@ package com.himdev.him.gametest;
 
 import com.himdev.him.entity.HimEntity;
 import com.himdev.him.entity.HimRemovalAuthorizer;
-import com.himdev.him.world.HimExistenceSeal;
 import com.himdev.him.world.HimLocator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
@@ -35,8 +33,6 @@ public final class HimTestState {
         if (currentHimId != null) {
             HimLocator.clear(level, currentHimId);
         }
-
-        clearExistenceSeal(helper);
     }
 
     public static void removeHimForTest(GameTestHelper helper, HimEntity him) {
@@ -46,8 +42,6 @@ public final class HimTestState {
         if (currentHimId != null) {
             HimLocator.clear(helper.getLevel(), currentHimId);
         }
-
-        clearExistenceSeal(helper);
     }
 
     public static void buildTightObstruction(GameTestHelper helper, BlockPos origin) {
@@ -122,14 +116,6 @@ public final class HimTestState {
                 level.setBlockAndUpdate(origin.offset(dx, 5, dz), Blocks.AIR.defaultBlockState());
             }
         }
-    }
-
-    private static void clearExistenceSeal(GameTestHelper helper) {
-        MinecraftServer server = helper.getLevel().getServer();
-        if (server == null) {
-            return;
-        }
-        HimExistenceSeal.clear(server);
     }
 
     private static void surroundWithSolidShell(ServerLevel level, BlockPos origin, boolean fillWithWater) {

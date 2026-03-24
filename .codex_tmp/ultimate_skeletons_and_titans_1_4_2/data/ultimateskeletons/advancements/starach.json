@@ -1,0 +1,23 @@
+{
+  "display": {
+    "background": "minecraft:textures/block/stone.png",
+    "icon": {
+      "item": "ultimateskeletons:spawnstarskeleton"
+    },
+    "title": {
+      "translate": "advancements.starach.title"
+    },
+    "description": {
+      "translate": "advancements.starach.descr"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "starach_0": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
