@@ -27,8 +27,8 @@ public final class HimEnvironmentPressureTracker {
         double dz = him.getZ() - lastZ;
         double progressSqr = dx * dx + dy * dy + dz * dz;
 
-        boolean hasDistantTarget = him.getTarget() != null && him.distanceToSqr(him.getTarget()) > 9.0D;
-        if (hasDistantTarget && progressSqr < MIN_PROGRESS_SQR) {
+        boolean hasMovementIntent = !him.isNoAi();
+        if (hasMovementIntent && progressSqr < MIN_PROGRESS_SQR) {
             stalledTicks++;
         } else {
             stalledTicks = 0;
@@ -55,7 +55,15 @@ public final class HimEnvironmentPressureTracker {
         return stalledTicks >= STALLED_THRESHOLD;
     }
 
+    public boolean isPersistentlyStalled() {
+        return stalledTicks >= STALLED_THRESHOLD;
+    }
+
     public boolean isPersistentlyObstructed() {
+        return obstructedTicks >= OBSTRUCTED_THRESHOLD;
+    }
+
+    public boolean isPersistentlyCollisionBlocked() {
         return obstructedTicks >= OBSTRUCTED_THRESHOLD;
     }
 

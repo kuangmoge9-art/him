@@ -58,6 +58,12 @@ public final class HimTestState {
         ServerLevel level = helper.getLevel();
         buildPitPlatform(level, origin, 4, 4);
 
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                level.setBlockAndUpdate(origin.offset(dx, -7, dz), Blocks.STONE.defaultBlockState());
+            }
+        }
+
         for (int dy = -7; dy <= 6; dy++) {
             level.setBlockAndUpdate(origin.offset(0, dy, 0), Blocks.AIR.defaultBlockState());
         }

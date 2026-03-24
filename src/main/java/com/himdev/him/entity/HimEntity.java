@@ -5,6 +5,7 @@ import com.himdev.him.entity.ai.HimMeleePunishGoal;
 import com.himdev.him.entity.ai.HimRangedPunishGoal;
 import com.himdev.him.entity.movement.HimEnvironmentDominance;
 import com.himdev.him.entity.movement.HimEnvironmentPressureTracker;
+import com.himdev.him.entity.movement.HimPitEscapeFlight;
 import com.himdev.him.guardian.DivinePunisher;
 import com.himdev.him.registry.HimEntityTypes;
 import com.himdev.him.util.HimLog;
@@ -39,10 +40,13 @@ import java.util.Comparator;
 public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final DivinePunisher DIVINE_PUNISHER = new DivinePunisher();
     private static final HimEnvironmentDominance ENVIRONMENT_DOMINANCE = new HimEnvironmentDominance();
+    private static final HimPitEscapeFlight PIT_ESCAPE_FLIGHT = new HimPitEscapeFlight();
     private static final double VOID_RECOVERY_SPEED = 2.0D;
     private static final int VOID_TRIGGER_DEPTH = 4;
     private static final int VOID_SAFE_OFFSET = 8;
     private static final int VOID_RECOVERY_SEARCH_HEIGHT = 24;
+    private static final int PIT_ESCAPE_MAX_TICKS = 40;
+    private static final int PIT_ESCAPE_COOLDOWN_TICKS = 20;
     private static final int[][] VOID_RECOVERY_SEARCH_OFFSETS = new int[][] {
             {0, 0},
             {1, 0},
@@ -59,6 +63,9 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             {0, -2}
     };
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
+    private Vec3 pitEscapeLanding;
+    private int pitEscapeTicksRemaining;
+    private int pitEscapeCooldownTicks;
     private boolean recoveringFromVoid;
     private boolean removalAuthorizedInProgress;
     private boolean deltaMovementUpdateAuthorizedInProgress;
@@ -324,6 +331,19 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             return;
         }
 
+        if (pitEscapeCooldownTicks > 0) {
+            pitEscapeCooldownTicks--;
+        }
+        if (level() instanceof ServerLevel serverLevel && tickPitEscapeFlight(serverLevel)) {
+            environmentPressureTracker.resetAfterCorrection(this);
+            return;
+        }
+        if (level() instanceof ServerLevel serverLevel && tryStartPitEscapeFlight(serverLevel)) {
+            tickPitEscapeFlight(serverLevel);
+            environmentPressureTracker.resetAfterCorrection(this);
+            return;
+        }
+
         this.setNoGravity(false);
         super.customServerAiStep();
 
@@ -369,8 +389,13 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         return this.horizontalCollision
                 || this.isInWall()
                 || this.isInWaterOrBubble()
+                || isEscapingPit()
                 || environmentPressureTracker.isPersistentlyObstructed()
                 || environmentPressureTracker.isPersistentlyInFluid();
+    }
+
+    public boolean isEscapingPit() {
+        return pitEscapeTicksRemaining > 0 && pitEscapeLanding != null;
     }
 
     private void updateVoidRecoveryState() {
@@ -444,6 +469,74 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     private boolean canOccupyVoidRecoverySpace(BlockState state) {
         return state.isAir() || state.canBeReplaced();
+    }
+
+    private boolean tryStartPitEscapeFlight(ServerLevel serverLevel) {
+        if (isEscapingPit() || pitEscapeCooldownTicks > 0) {
+            return false;
+        }
+
+        Vec3 landing = PIT_ESCAPE_FLIGHT.findEscapeLanding(serverLevel, this);
+        boolean shouldStart = PIT_ESCAPE_FLIGHT.shouldStart(serverLevel, this, environmentPressureTracker, landing);
+        if (!shouldStart) {
+            return false;
+        }
+
+        startPitEscapeFlight(landing);
+        return true;
+    }
+
+    private boolean tickPitEscapeFlight(ServerLevel serverLevel) {
+        if (!isEscapingPit()) {
+            return false;
+        }
+
+        this.getNavigation().stop();
+        this.setTarget(null);
+        this.setNoGravity(true);
+        this.fallDistance = 0.0F;
+
+        pitEscapeTicksRemaining--;
+        if (pitEscapeLanding == null) {
+            stopPitEscapeFlight();
+            return true;
+        }
+
+        Vec3 nextStep = PIT_ESCAPE_FLIGHT.nextStep(this, pitEscapeLanding);
+        this.setDeltaMovement(nextStep.subtract(this.position()));
+        this.moveTo(nextStep.x, nextStep.y, nextStep.z, this.getYRot(), this.getXRot());
+
+        if (PIT_ESCAPE_FLIGHT.hasReachedLanding(serverLevel, this, pitEscapeLanding)) {
+            stopPitEscapeFlight();
+            return true;
+        }
+
+        if (pitEscapeTicksRemaining <= 0) {
+            Vec3 timedOutLanding = pitEscapeLanding;
+            stopPitEscapeFlight();
+            if (timedOutLanding != null && !PIT_ESCAPE_FLIGHT.hasReachedLanding(serverLevel, this, timedOutLanding)) {
+                ENVIRONMENT_DOMINANCE.forceLocalEscape(serverLevel, this);
+            }
+            return true;
+        }
+
+        return true;
+    }
+
+    private void startPitEscapeFlight(Vec3 landing) {
+        pitEscapeLanding = landing;
+        pitEscapeTicksRemaining = PIT_ESCAPE_MAX_TICKS;
+        this.setNoGravity(true);
+        this.setDeltaMovement(Vec3.ZERO);
+    }
+
+    private void stopPitEscapeFlight() {
+        pitEscapeLanding = null;
+        pitEscapeTicksRemaining = 0;
+        pitEscapeCooldownTicks = PIT_ESCAPE_COOLDOWN_TICKS;
+        this.setNoGravity(false);
+        this.setDeltaMovement(Vec3.ZERO);
+        this.fallDistance = 0.0F;
     }
 
     private void sanitizeExternalVisualResidue() {

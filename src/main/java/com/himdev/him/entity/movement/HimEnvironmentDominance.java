@@ -50,6 +50,10 @@ public final class HimEnvironmentDominance {
         return false;
     }
 
+    public boolean forceLocalEscape(ServerLevel level, HimEntity him) {
+        return escapeNearby(level, him);
+    }
+
     private boolean escapeNearby(ServerLevel level, HimEntity him) {
         for (Vec3 offset : LOCAL_ESCAPE_OFFSETS) {
             Vec3 candidate = him.position().add(offset);
