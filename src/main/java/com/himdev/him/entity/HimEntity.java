@@ -61,6 +61,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
     private boolean recoveringFromVoid;
     private boolean removalAuthorizedInProgress;
+    private boolean deltaMovementUpdateAuthorizedInProgress;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -125,14 +126,14 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     @Override
     public void remove(RemovalReason reason) {
-        if (!level().isClientSide && reason.shouldDestroy()) {
-            boolean authorized = removalAuthorizedInProgress || HimRemovalAuthorizer.consume(getUUID());
-            if (!authorized) {
-                HimLog.info("him removal_blocked uuid={} reason={}", getUUID(), reason);
+        if (reason.shouldDestroy()) {
+            boolean authorized = removalAuthorizedInProgress || (!level().isClientSide && HimRemovalAuthorizer.consume(getUUID()));
+            if (HimRemovalProtection.shouldBlockDestroyRemoval(level().isClientSide, authorized)) {
+                HimLog.info("him removal_blocked uuid={} reason={} client={}", getUUID(), reason, level().isClientSide);
                 return;
             }
 
-            if (level() instanceof ServerLevel serverLevel) {
+            if (!level().isClientSide && level() instanceof ServerLevel serverLevel) {
                 HimLog.info("him removed uuid={} reason={}", getUUID(), reason);
                 HimLocator.clear(serverLevel, getUUID());
             }
@@ -143,6 +144,15 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         } finally {
             removalAuthorizedInProgress = false;
         }
+    }
+
+    @Override
+    public void onRemovedFromWorld() {
+        if (HimRemovalProtection.shouldBlockOnRemovedFromWorld(removalAuthorizedInProgress)) {
+            HimLog.info("him world_removal_blocked uuid={} client={}", getUUID(), level().isClientSide);
+            return;
+        }
+        super.onRemovedFromWorld();
     }
 
     @Override
@@ -215,6 +225,22 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     }
 
     @Override
+    public void setDeltaMovement(Vec3 deltaMovement) {
+        Vec3 safeDeltaMovement = HimMotionProtection.sanitizeDeltaMovement(deltaMovement);
+        if (HimMotionProtection.shouldBlockExternalDeltaMovement(deltaMovementUpdateAuthorizedInProgress, safeDeltaMovement)) {
+            HimLog.info("him velocity_blocked uuid={} motion={}", getUUID(), safeDeltaMovement);
+            super.setDeltaMovement(Vec3.ZERO);
+            return;
+        }
+        super.setDeltaMovement(safeDeltaMovement);
+    }
+
+    @Override
+    public void setDeltaMovement(double x, double y, double z) {
+        this.setDeltaMovement(new Vec3(x, y, z));
+    }
+
+    @Override
     public boolean isPushedByFluid() {
         return false;
     }
@@ -265,7 +291,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     @Override
     public void tick() {
         sanitizeExternalVisualResidue();
-        super.tick();
+        withAuthorizedDeltaMovementUpdates(() -> super.tick());
         sanitizeExternalVisualResidue();
     }
 
@@ -431,6 +457,16 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         }
         if (!Float.isFinite(this.getHealth()) || this.getHealth() <= 0.0F) {
             this.setHealth((float) this.getMaxHealth());
+        }
+    }
+
+    private void withAuthorizedDeltaMovementUpdates(Runnable action) {
+        boolean previous = deltaMovementUpdateAuthorizedInProgress;
+        deltaMovementUpdateAuthorizedInProgress = true;
+        try {
+            action.run();
+        } finally {
+            deltaMovementUpdateAuthorizedInProgress = previous;
         }
     }
 }

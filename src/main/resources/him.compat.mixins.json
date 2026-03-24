@@ -7,11 +7,14 @@
   "mixins": [
     "HimEntitySetRemovedMixin",
     "UltimateSkeletonsDeathlistMixin",
+    "UltimateSkeletonsDeathlistInternalMixin",
     "UltimateSkeletonsEventsMixin",
     "UltimateSkeletonsClearAttackProcedureMixin",
     "UltimateSkeletonsClearUseProcedureMixin",
     "UltimateSkeletonsLoadquitProcedureMixin",
     "UltimateSkeletonsSpawnquitProcedureMixin"
   ],
-  "client": []
+  "client": [
+    "ClientLevelHimRemovalMixin"
+  ]
 }

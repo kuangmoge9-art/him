@@ -1,5 +1,6 @@
 package com.himdev.him.compat.mixin;
 
+import com.himdev.him.compat.UltimateSkeletonsDeathlistCompat;
 import com.himdev.him.entity.HimEntity;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,9 +20,8 @@ abstract class UltimateSkeletonsDeathlistMixin {
     }
 
     @Inject(method = "normalattack(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"), cancellable = true, remap = false)
-    private static void him$ignoreDeathlistNormalAttacksAgainstHim(Entity entity, CallbackInfo callbackInfo) {
-        if (entity instanceof HimEntity) {
-            callbackInfo.cancel();
-        }
+    private static void him$rewriteDeathlistNormalattack(Entity entity, CallbackInfo callbackInfo) {
+        UltimateSkeletonsDeathlistCompat.executeSafeNormalAttack(entity);
+        callbackInfo.cancel();
     }
 }
