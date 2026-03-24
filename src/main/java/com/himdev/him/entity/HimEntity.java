@@ -502,7 +502,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             return true;
         }
 
-        Vec3 nextStep = PIT_ESCAPE_FLIGHT.nextStep(this, pitEscapeLanding);
+        Vec3 nextStep = PIT_ESCAPE_FLIGHT.nextStep(serverLevel, this, pitEscapeLanding);
         this.setDeltaMovement(nextStep.subtract(this.position()));
         this.moveTo(nextStep.x, nextStep.y, nextStep.z, this.getYRot(), this.getXRot());
 
