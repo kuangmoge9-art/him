@@ -3,6 +3,7 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.spongepowered.mixin' version '0.7.+'
 }
 
 version = mod_version
@@ -11,6 +12,13 @@ group = mod_group_id
 base {
     archivesName = mod_id
 }
+
+def ultimateSkeletonsJar = file('D:/mc qidongqi/.minecraft/mods/Ultimate_skeletons_and_titans-1.4.2.jar')
+def ultimateSkeletonsArtifact = 'Ultimate_skeletons_and_titans'
+def ultimateSkeletonsVersion = '1.4.2'
+def geckolibJar = file('D:/mc qidongqi/.minecraft/mods/geckolib-forge-1.20.1-4.8.3.jar')
+def geckolibArtifact = 'geckolib-forge-1.20.1'
+def geckolibVersion = '4.8.3'
 
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -115,6 +123,16 @@ repositories {
     // Put repositories for dependencies here
     // ForgeGradle automatically adds the Forge maven and Maven Central for you
 
+    maven {
+        url = 'https://repo.spongepowered.org/repository/maven-public/'
+    }
+
+    if (ultimateSkeletonsJar.exists()) {
+        flatDir {
+            dir ultimateSkeletonsJar.parentFile
+        }
+    }
+
     // If you have mod jar dependencies in ./libs, you can declare them as a repository like so.
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:flat_dir_resolver
     // flatDir {
@@ -129,9 +147,22 @@ dependencies {
     // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    if (ultimateSkeletonsJar.exists()) {
+        runtimeOnly fg.deobf("localmods:${ultimateSkeletonsArtifact}:${ultimateSkeletonsVersion}")
+    } else {
+        logger.lifecycle("Ultimate Skeletons compatibility runtime unavailable: ${ultimateSkeletonsJar}")
+    }
+
+    if (geckolibJar.exists()) {
+        runtimeOnly fg.deobf("localmods:${geckolibArtifact}:${geckolibVersion}")
+    } else {
+        logger.lifecycle("GeckoLib runtime unavailable for Ultimate Skeletons compatibility tests: ${geckolibJar}")
+    }
 
     // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
@@ -147,6 +178,11 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+}
+
+mixin {
+    add sourceSets.main, 'him.compat.refmap.json'
+    config 'him.compat.mixins.json'
 }
 
 tasks.named('test', Test).configure {
