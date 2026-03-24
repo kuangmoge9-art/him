@@ -5,6 +5,7 @@ import com.himdev.him.entity.ai.HimMeleePunishGoal;
 import com.himdev.him.entity.ai.HimRangedPunishGoal;
 import com.himdev.him.entity.movement.HimEnvironmentDominance;
 import com.himdev.him.entity.movement.HimEnvironmentPressureTracker;
+import com.himdev.him.entity.observation.HimObservationDirector;
 import com.himdev.him.guardian.DivinePunisher;
 import com.himdev.him.registry.HimEntityTypes;
 import com.himdev.him.util.HimLog;
@@ -42,6 +43,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final int RETURN_STABILIZATION_TICKS = 20;
 
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
+    private final HimObservationDirector observationDirector = new HimObservationDirector();
     private boolean recoveringFromVoid;
     private int returnStabilizationTicks;
     private float returnStabilizationYRot;
@@ -268,6 +270,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         }
 
         if (shouldRecoverFromVoid()) {
+            observationDirector.stop();
             this.setTarget(null);
             this.setNoGravity(true);
             this.setDeltaMovement(0.0D, 0.0D, 0.0D);
@@ -277,6 +280,11 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         }
 
         this.setNoGravity(false);
+        if (level() instanceof ServerLevel serverLevel && observationDirector.tick(serverLevel, this)) {
+            syncExistenceSeal(serverLevel);
+            return;
+        }
+
         super.customServerAiStep();
 
         if (!isValidCombatTarget(this.getTarget())) {
@@ -309,6 +317,26 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     private boolean shouldRecoverFromVoid() {
         return recoveringFromVoid;
+    }
+
+    public boolean isRecoveringFromVoidState() {
+        return recoveringFromVoid;
+    }
+
+    public boolean isReturnStabilizing() {
+        return returnStabilizationTicks > 0;
+    }
+
+    public boolean hasAvailableHostileTarget() {
+        return isValidCombatTarget(this.getTarget()) || findNearestHostileTarget() != null;
+    }
+
+    public boolean isUnderEnvironmentEscapePressure() {
+        return this.horizontalCollision
+                || this.isInWall()
+                || this.isInWaterOrBubble()
+                || environmentPressureTracker.isPersistentlyObstructed()
+                || environmentPressureTracker.isPersistentlyInFluid();
     }
 
     private void updateVoidRecoveryState() {
