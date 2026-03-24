@@ -60,7 +60,7 @@ public final class HimLocator {
 
         for (ServerLevel serverLevel : server.getAllLevels()) {
             Entity entity = serverLevel.getEntity(himId);
-            if (entity != null && entity.isAlive()) {
+            if (entity != null && entity.isAlive() && !entity.isRemoved()) {
                 return true;
             }
         }
