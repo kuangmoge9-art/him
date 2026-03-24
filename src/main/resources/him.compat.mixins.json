@@ -5,8 +5,13 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "him.compat.refmap.json",
   "mixins": [
+    "HimEntitySetRemovedMixin",
     "UltimateSkeletonsDeathlistMixin",
-    "UltimateSkeletonsEventsMixin"
+    "UltimateSkeletonsEventsMixin",
+    "UltimateSkeletonsClearAttackProcedureMixin",
+    "UltimateSkeletonsClearUseProcedureMixin",
+    "UltimateSkeletonsLoadquitProcedureMixin",
+    "UltimateSkeletonsSpawnquitProcedureMixin"
   ],
   "client": []
 }

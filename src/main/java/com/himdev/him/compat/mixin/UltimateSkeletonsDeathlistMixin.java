@@ -17,4 +17,11 @@ abstract class UltimateSkeletonsDeathlistMixin {
             callbackInfo.cancel();
         }
     }
+
+    @Inject(method = "normalattack(Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"), cancellable = true, remap = false)
+    private static void him$ignoreDeathlistNormalAttacksAgainstHim(Entity entity, CallbackInfo callbackInfo) {
+        if (entity instanceof HimEntity) {
+            callbackInfo.cancel();
+        }
+    }
 }

@@ -18,6 +18,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -59,6 +60,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     };
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
     private boolean recoveringFromVoid;
+    private boolean removalAuthorizedInProgress;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -124,7 +126,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     @Override
     public void remove(RemovalReason reason) {
         if (!level().isClientSide && reason.shouldDestroy()) {
-            boolean authorized = HimRemovalAuthorizer.consume(getUUID());
+            boolean authorized = removalAuthorizedInProgress || HimRemovalAuthorizer.consume(getUUID());
             if (!authorized) {
                 HimLog.info("him removal_blocked uuid={} reason={}", getUUID(), reason);
                 return;
@@ -135,12 +137,33 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
                 HimLocator.clear(serverLevel, getUUID());
             }
         }
-        super.remove(reason);
+        removalAuthorizedInProgress = true;
+        try {
+            super.remove(reason);
+        } finally {
+            removalAuthorizedInProgress = false;
+        }
     }
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
         return false;
+    }
+
+    public boolean isRemovalAuthorizedInProgress() {
+        return removalAuthorizedInProgress;
+    }
+
+    @Override
+    public void setHealth(float health) {
+        float maxHealth = (float) this.getMaxHealth();
+        float currentHealth = super.getHealth() > 0.0F ? super.getHealth() : maxHealth;
+        float safeHealth = Math.max(1.0F, Math.min(currentHealth, maxHealth));
+        if (!Float.isFinite(health) || health < safeHealth) {
+            super.setHealth(safeHealth);
+            return;
+        }
+        super.setHealth(Math.min(health, maxHealth));
     }
 
     @Override
@@ -237,6 +260,23 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     @Override
     public boolean canBeCollidedWith() {
         return false;
+    }
+
+    @Override
+    public void tick() {
+        sanitizeExternalVisualResidue();
+        super.tick();
+        sanitizeExternalVisualResidue();
+    }
+
+    @Override
+    public void handleEntityEvent(byte entityEventId) {
+        if (entityEventId == 2 || entityEventId == 3) {
+            sanitizeExternalVisualResidue();
+            return;
+        }
+        super.handleEntityEvent(entityEventId);
+        sanitizeExternalVisualResidue();
     }
 
     @Override
@@ -378,5 +418,19 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     private boolean canOccupyVoidRecoverySpace(BlockState state) {
         return state.isAir() || state.canBeReplaced();
+    }
+
+    private void sanitizeExternalVisualResidue() {
+        this.clearFire();
+        this.fallDistance = 0.0F;
+        this.hurtTime = 0;
+        this.deathTime = 0;
+        this.invulnerableTime = 0;
+        if (this.getPose() == Pose.DYING) {
+            this.setPose(Pose.STANDING);
+        }
+        if (!Float.isFinite(this.getHealth()) || this.getHealth() <= 0.0F) {
+            this.setHealth((float) this.getMaxHealth());
+        }
     }
 }
