@@ -12,7 +12,7 @@ import java.util.UUID;
 public final class HimObservationDirector {
     private static final double PLAYER_DETECTION_RANGE = 12.0D;
     private static final double PLAYER_SCENE_RANGE = 16.0D;
-    private static final int OBSERVATION_HOLD_TICKS = 200;
+    private static final int OBSERVATION_HOLD_TICKS = 240;
     private static final int OBSERVATION_COOLDOWN_TICKS = 160;
     private static final Vec3[] START_OFFSETS = new Vec3[] {
             new Vec3(0.0D, 3.0D, 0.0D),
@@ -60,7 +60,7 @@ public final class HimObservationDirector {
     }
 
     private boolean tickObservation(ServerLevel level, HimEntity him) {
-        Player player = observedPlayerId == null ? null : level.getPlayerByUUID(observedPlayerId);
+        Player player = findObservedPlayer(level, him);
         if (player == null || !player.isAlive() || shouldAbortObservation(him, player)) {
             stopObservation(him);
             return false;
@@ -124,6 +124,20 @@ public final class HimObservationDirector {
         observationPoint = candidate;
         holdTicksRemaining = OBSERVATION_HOLD_TICKS;
         holdObservationPose(him, player);
+    }
+
+    private Player findObservedPlayer(ServerLevel level, HimEntity him) {
+        if (observedPlayerId == null) {
+            return null;
+        }
+
+        return level.getEntitiesOfClass(
+                        Player.class,
+                        him.getBoundingBox().inflate(PLAYER_SCENE_RANGE * 2.0D),
+                        candidate -> candidate.isAlive() && observedPlayerId.equals(candidate.getUUID())
+                ).stream()
+                .findFirst()
+                .orElse(null);
     }
 
     private void holdObservationPose(HimEntity him, Player player) {
