@@ -11,10 +11,16 @@ public final class HimRemovalAuthorizer {
     }
 
     public static void authorize(UUID himId) {
+        if (himId == null) {
+            return;
+        }
         AUTHORIZED.add(himId);
     }
 
     public static boolean consume(UUID himId) {
+        if (himId == null) {
+            return false;
+        }
         return AUTHORIZED.remove(himId);
     }
 }
