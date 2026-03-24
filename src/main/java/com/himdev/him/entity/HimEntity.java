@@ -64,6 +64,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     };
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
     private Vec3 pitEscapeLanding;
+    private boolean pitEscapeUsesCruisePath;
     private int pitEscapeTicksRemaining;
     private int pitEscapeCooldownTicks;
     private boolean recoveringFromVoid;
@@ -482,7 +483,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             return false;
         }
 
-        startPitEscapeFlight(landing);
+        startPitEscapeFlight(serverLevel, landing);
         return true;
     }
 
@@ -502,7 +503,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             return true;
         }
 
-        Vec3 nextStep = PIT_ESCAPE_FLIGHT.nextStep(serverLevel, this, pitEscapeLanding);
+        Vec3 nextStep = PIT_ESCAPE_FLIGHT.nextStep(serverLevel, this, pitEscapeLanding, pitEscapeUsesCruisePath);
         this.setDeltaMovement(nextStep.subtract(this.position()));
         this.moveTo(nextStep.x, nextStep.y, nextStep.z, this.getYRot(), this.getXRot());
 
@@ -523,8 +524,9 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         return true;
     }
 
-    private void startPitEscapeFlight(Vec3 landing) {
+    private void startPitEscapeFlight(ServerLevel serverLevel, Vec3 landing) {
         pitEscapeLanding = landing;
+        pitEscapeUsesCruisePath = PIT_ESCAPE_FLIGHT.shouldUseCruisePath(serverLevel, this, landing);
         pitEscapeTicksRemaining = PIT_ESCAPE_MAX_TICKS;
         this.setNoGravity(true);
         this.setDeltaMovement(Vec3.ZERO);
@@ -532,6 +534,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     private void stopPitEscapeFlight() {
         pitEscapeLanding = null;
+        pitEscapeUsesCruisePath = false;
         pitEscapeTicksRemaining = 0;
         pitEscapeCooldownTicks = PIT_ESCAPE_COOLDOWN_TICKS;
         this.setNoGravity(false);

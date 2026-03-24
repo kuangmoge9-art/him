@@ -15,8 +15,11 @@ public final class HimPitEscapeFlight {
     private static final double MIN_ASCENT_TO_ESCAPE = 0.5D;
     private static final int PIT_WALL_THRESHOLD = 2;
     private static final int SAFE_LANDING_MAX_BLOCKED_SIDES = 1;
-    private static final double FLIGHT_SPEED = 0.6D;
-    private static final double CRUISE_HEIGHT_ABOVE_LANDING = 1.0D;
+    private static final double DIRECT_FLIGHT_SPEED = 0.6D;
+    private static final double ASCENT_SPEED = 0.8D;
+    private static final double CRUISE_SPEED = 0.45D;
+    private static final double DESCENT_SPEED = 0.5D;
+    private static final double CRUISE_HEIGHT_ABOVE_LANDING = 1.5D;
     private static final double CRUISE_HEIGHT_EPSILON = 0.05D;
     private static final double HORIZONTAL_ALIGNMENT_REACHED_SQR = 0.25D * 0.25D;
     private static final double LANDING_REACHED_SQR = 0.5D * 0.5D;
@@ -68,15 +71,23 @@ public final class HimPitEscapeFlight {
         return bestCandidate;
     }
 
-    public Vec3 nextStep(ServerLevel level, HimEntity him, Vec3 landing) {
+    public boolean shouldUseCruisePath(ServerLevel level, HimEntity him, Vec3 landing) {
+        return shouldUseCruisePath(isPitLikeTrap(level, him), hasClearVerticalAscent(level, him, him.position(), landing.y + CRUISE_HEIGHT_ABOVE_LANDING));
+    }
+
+    static boolean shouldUseCruisePath(boolean pitLikeTrap, boolean clearVerticalAscent) {
+        return pitLikeTrap && clearVerticalAscent;
+    }
+
+    public Vec3 nextStep(ServerLevel level, HimEntity him, Vec3 landing, boolean useCruisePath) {
         Vec3 current = him.position();
-        if (!hasClearVerticalAscent(level, him, current, landing.y + CRUISE_HEIGHT_ABOVE_LANDING)) {
-            return directNextStep(current, landing, FLIGHT_SPEED);
+        if (!useCruisePath) {
+            return directNextStep(current, landing, DIRECT_FLIGHT_SPEED);
         }
 
         for (int extraHeight = 0; extraHeight <= CRUISE_HEIGHT_SEARCH_STEPS; extraHeight++) {
             double cruiseY = Math.max(current.y, landing.y + CRUISE_HEIGHT_ABOVE_LANDING + extraHeight);
-            Vec3 next = nextStepForPath(current, landing, cruiseY, FLIGHT_SPEED);
+            Vec3 next = nextStepForPhasedPath(current, landing, cruiseY, ASCENT_SPEED, CRUISE_SPEED, DESCENT_SPEED);
             if (isCollisionFree(level, him, next)) {
                 return next;
             }
@@ -84,13 +95,15 @@ public final class HimPitEscapeFlight {
         return current;
     }
 
-    static Vec3 nextStepForPath(Vec3 current, Vec3 landing, double cruiseY, double speed) {
+    static Vec3 nextStepForPhasedPath(Vec3 current, Vec3 landing, double cruiseY,
+                                      double ascentSpeed, double cruiseSpeed, double descentSpeed) {
         Vec3 stageTarget = resolveStageTarget(current, landing, cruiseY);
         Vec3 delta = stageTarget.subtract(current);
         if (delta.lengthSqr() <= LANDING_REACHED_SQR) {
             return stageTarget;
         }
 
+        double speed = movementSpeedForStage(current, landing, cruiseY, ascentSpeed, cruiseSpeed, descentSpeed);
         Vec3 direction = delta.normalize().scale(Math.min(speed, delta.length()));
         return current.add(direction);
     }
@@ -163,6 +176,22 @@ public final class HimPitEscapeFlight {
         return landing;
     }
 
+    private static double movementSpeedForStage(Vec3 current, Vec3 landing, double cruiseY,
+                                                double ascentSpeed, double cruiseSpeed, double descentSpeed) {
+        double effectiveCruiseY = Math.max(cruiseY, landing.y);
+        if (current.y + CRUISE_HEIGHT_EPSILON < effectiveCruiseY) {
+            return ascentSpeed;
+        }
+
+        double dx = landing.x - current.x;
+        double dz = landing.z - current.z;
+        if ((dx * dx) + (dz * dz) > HORIZONTAL_ALIGNMENT_REACHED_SQR) {
+            return cruiseSpeed;
+        }
+
+        return descentSpeed;
+    }
+
     private boolean isCollisionFree(ServerLevel level, HimEntity him, Vec3 next) {
         Vec3 current = him.position();
         AABB nextBox = him.getBoundingBox().move(
@@ -177,7 +206,7 @@ public final class HimPitEscapeFlight {
         double sampleY = current.y;
         double requiredY = Math.max(current.y, targetY);
         while (sampleY + CRUISE_HEIGHT_EPSILON < requiredY) {
-            sampleY = Math.min(requiredY, sampleY + FLIGHT_SPEED);
+            sampleY = Math.min(requiredY, sampleY + ASCENT_SPEED);
             if (!isCollisionFree(level, him, new Vec3(current.x, sampleY, current.z))) {
                 return false;
             }
