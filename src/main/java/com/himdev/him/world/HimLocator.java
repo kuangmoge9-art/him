@@ -23,6 +23,14 @@ public final class HimLocator {
         return savedData.currentHimId();
     }
 
+    public boolean markFirstJoinSpawnTriggered() {
+        return savedData.tryMarkFirstJoinSpawnTriggered();
+    }
+
+    public boolean isFirstJoinSpawnTriggered() {
+        return savedData.isFirstJoinSpawnTriggered();
+    }
+
     public boolean tryRegister(UUID himId) {
         return tryRegisterInternal(null, savedData, himId);
     }
@@ -38,6 +46,18 @@ public final class HimLocator {
 
     public static UUID currentHimId(ServerLevel level) {
         return getData(level).currentHimId();
+    }
+
+    public static boolean markFirstJoinSpawnTriggered(ServerLevel level) {
+        return getData(level).tryMarkFirstJoinSpawnTriggered();
+    }
+
+    public static boolean isFirstJoinSpawnTriggered(ServerLevel level) {
+        return getData(level).isFirstJoinSpawnTriggered();
+    }
+
+    public static void clearFirstJoinSpawnTriggered(ServerLevel level) {
+        getData(level).clearFirstJoinSpawnTriggered();
     }
 
     public static boolean hasActiveHim(ServerLevel level) {

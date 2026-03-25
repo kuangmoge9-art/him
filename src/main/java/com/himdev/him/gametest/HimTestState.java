@@ -33,6 +33,7 @@ public final class HimTestState {
         if (currentHimId != null) {
             HimLocator.clear(level, currentHimId);
         }
+        HimLocator.clearFirstJoinSpawnTriggered(level);
     }
 
     public static void removeHimForTest(GameTestHelper helper, HimEntity him) {

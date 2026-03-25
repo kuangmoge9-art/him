@@ -8,13 +8,16 @@ import java.util.UUID;
 
 public final class HimSavedData extends SavedData {
     private static final String CURRENT_HIM_ID_KEY = "currentHimId";
+    private static final String FIRST_JOIN_SPAWN_TRIGGERED_KEY = "firstJoinSpawnTriggered";
     private UUID currentHimId;
+    private boolean firstJoinSpawnTriggered;
 
     public static HimSavedData load(CompoundTag tag) {
         HimSavedData data = new HimSavedData();
         if (tag.hasUUID(CURRENT_HIM_ID_KEY)) {
             data.currentHimId = tag.getUUID(CURRENT_HIM_ID_KEY);
         }
+        data.firstJoinSpawnTriggered = tag.getBoolean(FIRST_JOIN_SPAWN_TRIGGERED_KEY);
         return data;
     }
 
@@ -39,11 +42,33 @@ public final class HimSavedData extends SavedData {
         return currentHimId;
     }
 
+    public boolean tryMarkFirstJoinSpawnTriggered() {
+        if (firstJoinSpawnTriggered) {
+            return false;
+        }
+        firstJoinSpawnTriggered = true;
+        setDirty();
+        return true;
+    }
+
+    public boolean isFirstJoinSpawnTriggered() {
+        return firstJoinSpawnTriggered;
+    }
+
+    public void clearFirstJoinSpawnTriggered() {
+        if (!firstJoinSpawnTriggered) {
+            return;
+        }
+        firstJoinSpawnTriggered = false;
+        setDirty();
+    }
+
     @Override
     public CompoundTag save(CompoundTag tag) {
         if (currentHimId != null) {
             tag.putUUID(CURRENT_HIM_ID_KEY, currentHimId);
         }
+        tag.putBoolean(FIRST_JOIN_SPAWN_TRIGGERED_KEY, firstJoinSpawnTriggered);
         return tag;
     }
 }
