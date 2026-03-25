@@ -1,5 +1,6 @@
 package com.himdev.him.guardian;
 
+import com.himdev.him.compat.UltimateSkeletonsPunishmentCompat;
 import com.himdev.him.registry.HimDamageTypes;
 import com.himdev.him.util.HimLog;
 import net.minecraft.server.level.ServerLevel;
@@ -25,6 +26,20 @@ public final class DivinePunisher {
         if (!target.isAlive()) {
             HimLog.info("punishment skipped target={} reason=already_dead", target.getUUID());
             return;
+        }
+
+        if (UltimateSkeletonsPunishmentCompat.shouldUseCompat(target)) {
+            boolean compatApplied = UltimateSkeletonsPunishmentCompat.punish(level, target);
+            HimLog.info("punished target={} type=compat accepted={} alive={} removed={} reason={} health={}",
+                    target.getUUID(),
+                    compatApplied,
+                    target.isAlive(),
+                    target.isRemoved(),
+                    target.getRemovalReason(),
+                    target instanceof LivingEntity living ? living.getHealth() : -1.0F);
+            if (compatApplied || !target.isAlive()) {
+                return;
+            }
         }
 
         if (target instanceof LivingEntity livingEntity) {

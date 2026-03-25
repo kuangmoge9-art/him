@@ -72,6 +72,35 @@ public final class HimCombatGameTests {
         });
     }
 
+    @GameTest(template = "empty", batch = "him_combat_external_target")
+    public static void himAcceptsExternalHostileTargetAssignments(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        level.setDayTime(18000L);
+        HimEntity him = HimEntity.spawnForTest(level, helper.absolutePos(BlockPos.ZERO));
+        Zombie nearbyBystander = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+        Zombie attacker = helper.spawn(EntityType.ZOMBIE, 6, 0, 0);
+
+        him.setTarget(attacker);
+
+        helper.runAfterDelay(40, () -> {
+            helper.assertTrue(him.isAlive(), "Expected test Him to survive uniqueness registration");
+            helper.assertTrue(
+                    him.getTarget() == attacker || !attacker.isAlive(),
+                    "Expected Him to preserve the external hostile target, target=" + him.getTarget() + ", attackerAlive=" + attacker.isAlive()
+            );
+            helper.assertTrue(
+                    nearbyBystander.isAlive(),
+                    "Expected uninvolved nearby hostile mob to stay alive under external targeting, bystanderHealth=" + nearbyBystander.getHealth() + ", target=" + him.getTarget()
+            );
+            helper.assertFalse(attacker.isAlive(), "Expected external hostile target to be punished");
+            HimTestState.removeHimForTest(helper, him);
+            nearbyBystander.remove(Entity.RemovalReason.DISCARDED);
+            attacker.remove(Entity.RemovalReason.DISCARDED);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", batch = "him_combat_player_safe")
     public static void himNeverTargetsPlayer(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);

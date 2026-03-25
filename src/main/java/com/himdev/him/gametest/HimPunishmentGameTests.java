@@ -4,13 +4,15 @@ import com.himdev.him.HimMod;
 import com.himdev.him.guardian.DivinePunisher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Pig;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
@@ -18,6 +20,11 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 @GameTestHolder(HimMod.MOD_ID)
 @PrefixGameTestTemplate(false)
@@ -81,5 +88,82 @@ public final class HimPunishmentGameTests {
             );
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "empty", batch = "him_punishment_ultimate_skeletons_starlight", timeoutTicks = 160)
+    public static void punishedUltimateSkeletonsStarlightSkeletonLosesAllHealth(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        LivingEntity starlightSkeleton = (LivingEntity) createUltimateSkeletonsEntity(
+                "STARLIGHTSKELETON",
+                "net.mcreator.ultimateskeletons.entity.StarlightskeletonEntity",
+                level,
+                helper.absolutePos(new BlockPos(2, 0, 0))
+        );
+
+        DivinePunisher punisher = new DivinePunisher();
+        punisher.punish(level, starlightSkeleton);
+
+        helper.assertTrue(
+                starlightSkeleton.isRemoved() || starlightSkeleton.getHealth() <= 0.0F,
+                "Expected punished Ultimate Skeletons starlight skeleton to be removed or lose all health"
+        );
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty", batch = "him_punishment_ultimate_skeletons_titan", timeoutTicks = 200)
+    public static void punishedUltimateSkeletonsSkeletonTitanDies(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        Entity skeletonTitan = spawnUltimateSkeletonsEntity(
+                "SKELETONTITAN",
+                "net.mcreator.ultimateskeletons.entity.SkeletontitanEntity",
+                level,
+                helper.absolutePos(new BlockPos(2, 0, 0))
+        );
+
+        DivinePunisher punisher = new DivinePunisher();
+        punisher.punish(level, skeletonTitan);
+
+        helper.runAfterDelay(40, () -> {
+            helper.assertTrue(
+                    skeletonTitan.isRemoved() || !skeletonTitan.isAlive(),
+                    "Expected punished Ultimate Skeletons skeleton titan to be removed"
+            );
+            helper.succeed();
+        });
+    }
+
+    private static Entity spawnUltimateSkeletonsEntity(String registryFieldName, String entityClassName, ServerLevel level, BlockPos pos) {
+        Entity entity = createUltimateSkeletonsEntity(registryFieldName, entityClassName, level, pos);
+        if (!level.addFreshEntity(entity)) {
+            throw new GameTestAssertException("Unable to add Ultimate Skeletons entity to test level: " + entityClassName);
+        }
+        return entity;
+    }
+
+    private static Entity createUltimateSkeletonsEntity(String registryFieldName, String entityClassName, ServerLevel level, BlockPos pos) {
+        try {
+            Class<?> entitiesClass = Class.forName("net.mcreator.ultimateskeletons.init.UltimateskeletonsModEntities");
+            Field registryField = entitiesClass.getField(registryFieldName);
+            Object registryObject = registryField.get(null);
+            Method get = registryObject.getClass().getMethod("get");
+            EntityType<?> entityType = (EntityType<?>) get.invoke(registryObject);
+            Entity entity = entityType.create(level);
+            if (entity == null) {
+                Class<?> entityClass = Class.forName(entityClassName);
+                Constructor<?> constructor = entityClass.getConstructor(EntityType.class, net.minecraft.world.level.Level.class);
+                entity = (Entity) constructor.newInstance(entityType, level);
+            }
+            entity.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
+            return entity;
+        } catch (ClassNotFoundException exception) {
+            throw new GameTestAssertException("Ultimate Skeletons runtime not present: " + exception.getMessage());
+        } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException exception) {
+            throw new GameTestAssertException("Unable to create Ultimate Skeletons entity " + entityClassName + ": " + exception);
+        } catch (InvocationTargetException | InstantiationException exception) {
+            Throwable cause = exception instanceof InvocationTargetException invocationTargetException && invocationTargetException.getCause() != null
+                    ? invocationTargetException.getCause()
+                    : exception;
+            throw new GameTestAssertException("Ultimate Skeletons entity creation failed for " + entityClassName + ": " + cause);
+        }
     }
 }

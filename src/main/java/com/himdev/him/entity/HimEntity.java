@@ -165,6 +165,21 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         return false;
     }
 
+    @Override
+    public void setTarget(LivingEntity target) {
+        if (target == null) {
+            angerTarget = null;
+            super.setTarget(null);
+            return;
+        }
+        if (isValidAngerTarget(target)) {
+            angerTarget = target;
+            super.setTarget(target);
+            return;
+        }
+        super.setTarget(null);
+    }
+
     public boolean isRemovalAuthorizedInProgress() {
         return removalAuthorizedInProgress;
     }
