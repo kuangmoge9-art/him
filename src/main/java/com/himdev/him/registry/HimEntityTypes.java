@@ -17,6 +17,7 @@ public final class HimEntityTypes {
     public static final RegistryObject<EntityType<HimEntity>> HIM = ENTITY_TYPES.register(
             "him",
             () -> EntityType.Builder.of(HimEntity::new, MobCategory.MISC)
+                    .noSummon()
                     .sized(0.6F, 1.95F)
                     .clientTrackingRange(10)
                     .build("him")

@@ -10,6 +10,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -75,6 +76,33 @@ public final class HimSpawnGameTests {
             }
 
             HimTestState.removeHimForTest(helper, him);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "him_spawn_command")
+    public static void himCannotBeSummonedByCommand(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        Vec3 summonPos = Vec3.atBottomCenterOf(helper.absolutePos(BlockPos.ZERO));
+        int result = level.getServer().getCommands().performPrefixedCommand(
+                level.getServer()
+                        .createCommandSourceStack()
+                        .withPermission(4)
+                        .withSuppressedOutput()
+                        .withLevel(level)
+                        .withPosition(summonPos),
+                "summon him:him ~ ~ ~"
+        );
+
+        helper.runAfterDelay(2, () -> {
+            long himCount = level.getEntitiesOfClass(HimEntity.class, new AABB(summonPos, summonPos).inflate(8.0D)).size();
+            if (result != 0) {
+                throw new GameTestAssertException("Expected summon command to fail for Him, got result " + result);
+            }
+            if (himCount != 0) {
+                throw new GameTestAssertException("Expected summon command to leave no Him entities, found " + himCount);
+            }
             helper.succeed();
         });
     }
