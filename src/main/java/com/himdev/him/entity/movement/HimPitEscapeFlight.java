@@ -29,6 +29,9 @@ public final class HimPitEscapeFlight {
     private static final double CRUISE_HEIGHT_EPSILON = 0.05D;
     private static final double HORIZONTAL_ALIGNMENT_REACHED_SQR = 0.25D * 0.25D;
     private static final double LANDING_REACHED_SQR = 0.5D * 0.5D;
+    private static final double FINAL_LANDING_SNAP_DISTANCE = 0.08D;
+    private static final double FINAL_LANDING_SNAP_SQR = FINAL_LANDING_SNAP_DISTANCE * FINAL_LANDING_SNAP_DISTANCE;
+    private static final double DESCENT_SLOWDOWN_FACTOR = 0.6D;
 
     public boolean shouldStart(ServerLevel level, HimEntity him, HimEnvironmentPressureTracker tracker, Vec3 landing) {
         if (landing == null || landing.y < him.getY() + MIN_ASCENT_TO_ESCAPE) {
@@ -136,28 +139,39 @@ public final class HimPitEscapeFlight {
     static Vec3 nextStepForPhase(Vec3 current, Vec3 landing, double cruiseY, FlightPhase phase,
                                  double ascentSpeed, double cruiseSpeed, double descentSpeed) {
         Vec3 stageTarget = resolveStageTarget(current, landing, cruiseY, phase);
-        Vec3 delta = stageTarget.subtract(current);
-        if (delta.lengthSqr() <= LANDING_REACHED_SQR) {
-            return stageTarget;
+        if (phase == FlightPhase.DESCENT) {
+            return nextDescentStep(current, stageTarget, descentSpeed);
         }
-
         double speed = movementSpeedForPhase(phase, ascentSpeed, cruiseSpeed, descentSpeed);
-        Vec3 direction = delta.normalize().scale(Math.min(speed, delta.length()));
-        return current.add(direction);
+        return nextStepTowardTarget(current, stageTarget, speed, LANDING_REACHED_SQR);
     }
 
     private static Vec3 directNextStep(Vec3 current, Vec3 landing, double speed) {
-        Vec3 delta = landing.subtract(current);
-        if (delta.lengthSqr() <= LANDING_REACHED_SQR) {
-            return landing;
+        return nextStepTowardTarget(current, landing, speed, LANDING_REACHED_SQR);
+    }
+
+    private static Vec3 nextDescentStep(Vec3 current, Vec3 target, double maxDescentSpeed) {
+        double remainingDistance = current.distanceTo(target);
+        double easedSpeed = Math.min(maxDescentSpeed, remainingDistance * DESCENT_SLOWDOWN_FACTOR);
+        return nextStepTowardTarget(current, target, easedSpeed, FINAL_LANDING_SNAP_SQR);
+    }
+
+    private static Vec3 nextStepTowardTarget(Vec3 current, Vec3 target, double speed, double snapDistanceSqr) {
+        Vec3 delta = target.subtract(current);
+        if (delta.lengthSqr() <= snapDistanceSqr) {
+            return target;
         }
 
         Vec3 direction = delta.normalize().scale(Math.min(speed, delta.length()));
-        return current.add(direction);
+        Vec3 next = current.add(direction);
+        if (next.distanceToSqr(target) <= snapDistanceSqr) {
+            return target;
+        }
+        return next;
     }
 
     public boolean hasReachedLanding(ServerLevel level, HimEntity him, Vec3 landing) {
-        if (landing == null || him.position().distanceToSqr(landing) > LANDING_REACHED_SQR) {
+        if (landing == null || him.position().distanceToSqr(landing) > FINAL_LANDING_SNAP_SQR) {
             return false;
         }
         return isSafeLanding(level, him, BlockPos.containing(landing.x, landing.y, landing.z));

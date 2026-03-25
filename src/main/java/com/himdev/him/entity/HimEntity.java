@@ -517,8 +517,11 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
                 pitEscapeCruiseY,
                 pitEscapePhase
         );
-        this.setDeltaMovement(nextStep.subtract(this.position()));
         this.moveTo(nextStep.x, nextStep.y, nextStep.z, this.getYRot(), this.getXRot());
+        // Pit escape already applies an explicit step position. Leaving a matching
+        // delta movement here makes the client see a second motion source and causes
+        // visible rubber-banding during the airborne phase.
+        this.setDeltaMovement(Vec3.ZERO);
 
         if (PIT_ESCAPE_FLIGHT.hasReachedLanding(serverLevel, this, pitEscapeLanding)) {
             stopPitEscapeFlight();

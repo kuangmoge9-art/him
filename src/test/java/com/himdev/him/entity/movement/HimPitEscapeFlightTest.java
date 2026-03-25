@@ -62,7 +62,7 @@ class HimPitEscapeFlightTest {
     }
 
     @Test
-    void nextStepKeepsDescendingAfterDescentStarts() {
+    void nextStepContinuesDescendingAtFullSpeedWhileStillHighAboveGround() {
         Vec3 current = new Vec3(2.5D, 1.0D, 1.5D);
         Vec3 landing = new Vec3(2.5D, 0.0D, 1.5D);
 
@@ -79,5 +79,45 @@ class HimPitEscapeFlightTest {
         assertEquals(2.5D, next.x, 1.0E-9D);
         assertEquals(0.5D, next.y, 1.0E-9D);
         assertEquals(1.5D, next.z, 1.0E-9D);
+    }
+
+    @Test
+    void nextStepSlowsDescentAsItApproachesGround() {
+        Vec3 current = new Vec3(2.3D, 0.6D, 1.5D);
+        Vec3 landing = new Vec3(2.5D, 0.0D, 1.5D);
+
+        Vec3 next = HimPitEscapeFlight.nextStepForPhase(
+                current,
+                landing,
+                1.5D,
+                HimPitEscapeFlight.FlightPhase.DESCENT,
+                0.8D,
+                0.45D,
+                0.5D
+        );
+
+        assertEquals(2.42D, next.x, 1.0E-9D);
+        assertEquals(0.24D, next.y, 1.0E-9D);
+        assertEquals(landing.z, next.z, 1.0E-9D);
+    }
+
+    @Test
+    void nextStepStillSnapsToLandingWhenAlreadyVeryCloseToGround() {
+        Vec3 current = new Vec3(2.5D, 0.08D, 1.5D);
+        Vec3 landing = new Vec3(2.5D, 0.0D, 1.5D);
+
+        Vec3 next = HimPitEscapeFlight.nextStepForPhase(
+                current,
+                landing,
+                1.5D,
+                HimPitEscapeFlight.FlightPhase.DESCENT,
+                0.8D,
+                0.45D,
+                0.5D
+        );
+
+        assertEquals(landing.x, next.x, 1.0E-9D);
+        assertEquals(landing.y, next.y, 1.0E-9D);
+        assertEquals(landing.z, next.z, 1.0E-9D);
     }
 }

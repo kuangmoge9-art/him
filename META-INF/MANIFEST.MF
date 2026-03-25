@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Specification-Title: mobbottle
+Specification-Vendor: firis-games
+Specification-Version: 1
+Implementation-Title: MobBottle-forge
+Implementation-Version: 1.20.1-0.3
+Implementation-Vendor: firis-games
+Implementation-Timestamp: 2025-08-16T16:12:59+0900
+
