@@ -21,11 +21,19 @@ class UltimateSkeletonsCompatMixinConfigTest {
                     "Expected Deathlist internal protection mixin to be declared in him.compat.mixins.json");
             assertTrue(config.contains("\"ClientLevelHimRemovalMixin\""),
                     "Expected client-level Him removal protection mixin to be declared in him.compat.mixins.json");
+            assertTrue(config.contains("\"MobBottleBlockItemCaptureMixin\""),
+                    "Expected MobBottle capture protection mixin to be declared in him.compat.mixins.json");
+            assertTrue(config.contains("\"MobBottleBlockItemUseOnMixin\""),
+                    "Expected MobBottle use-on purification mixin to be declared in him.compat.mixins.json");
         }
 
         assertNotNull(Class.forName("com.himdev.him.compat.mixin.UltimateSkeletonsDeathlistInternalMixin"),
                 "Expected Deathlist internal protection mixin class to exist");
         assertNotNull(Class.forName("com.himdev.him.compat.mixin.ClientLevelHimRemovalMixin"),
                 "Expected client-level Him removal protection mixin class to exist");
+        assertNotNull(Class.forName("com.himdev.him.compat.mixin.MobBottleBlockItemCaptureMixin"),
+                "Expected MobBottle capture protection mixin class to exist");
+        assertNotNull(Class.forName("com.himdev.him.compat.mixin.MobBottleBlockItemUseOnMixin"),
+                "Expected MobBottle use-on purification mixin class to exist");
     }
 }

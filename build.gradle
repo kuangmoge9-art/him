@@ -16,6 +16,9 @@ base {
 def ultimateSkeletonsJar = file('D:/mc qidongqi/.minecraft/mods/Ultimate_skeletons_and_titans-1.4.2.jar')
 def ultimateSkeletonsArtifact = 'Ultimate_skeletons_and_titans'
 def ultimateSkeletonsVersion = '1.4.2'
+def mobBottleJar = file('D:/mc qidongqi/.minecraft/mods/mobbottle-1.20.1-0.3.jar')
+def mobBottleArtifact = 'mobbottle-1.20.1'
+def mobBottleVersion = '0.3'
 def geckolibJar = file('D:/mc qidongqi/.minecraft/mods/geckolib-forge-1.20.1-4.8.3.jar')
 def geckolibArtifact = 'geckolib-forge-1.20.1'
 def geckolibVersion = '4.8.3'
@@ -127,7 +130,7 @@ repositories {
         url = 'https://repo.spongepowered.org/repository/maven-public/'
     }
 
-    if (ultimateSkeletonsJar.exists()) {
+    if (ultimateSkeletonsJar.exists() || mobBottleJar.exists() || geckolibJar.exists()) {
         flatDir {
             dir ultimateSkeletonsJar.parentFile
         }
@@ -156,6 +159,12 @@ dependencies {
         runtimeOnly fg.deobf("localmods:${ultimateSkeletonsArtifact}:${ultimateSkeletonsVersion}")
     } else {
         logger.lifecycle("Ultimate Skeletons compatibility runtime unavailable: ${ultimateSkeletonsJar}")
+    }
+
+    if (mobBottleJar.exists()) {
+        runtimeOnly fg.deobf("localmods:${mobBottleArtifact}:${mobBottleVersion}")
+    } else {
+        logger.lifecycle("MobBottle compatibility runtime unavailable: ${mobBottleJar}")
     }
 
     if (geckolibJar.exists()) {

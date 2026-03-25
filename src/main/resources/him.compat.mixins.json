@@ -6,6 +6,8 @@
   "refmap": "him.compat.refmap.json",
   "mixins": [
     "HimEntitySetRemovedMixin",
+    "MobBottleBlockItemCaptureMixin",
+    "MobBottleBlockItemUseOnMixin",
     "UltimateSkeletonsDeathlistMixin",
     "UltimateSkeletonsDeathlistInternalMixin",
     "UltimateSkeletonsEventsMixin",
