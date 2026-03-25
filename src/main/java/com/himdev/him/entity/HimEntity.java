@@ -26,7 +26,6 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -373,7 +372,11 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     }
 
     private boolean isValidCombatTarget(LivingEntity target) {
-        return target != null && target.isAlive() && target instanceof Enemy && !(target instanceof Player);
+        return target != null
+                && target.isAlive()
+                && target != this
+                && target instanceof Mob
+                && !(target instanceof Player);
     }
 
     private boolean isValidAngerTarget(LivingEntity target) {

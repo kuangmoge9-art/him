@@ -9,6 +9,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.gametest.GameTestHolder;
@@ -78,7 +79,7 @@ public final class HimCombatGameTests {
         ServerLevel level = helper.getLevel();
         level.setDayTime(18000L);
         HimEntity him = HimEntity.spawnForTest(level, helper.absolutePos(BlockPos.ZERO));
-        Zombie nearbyBystander = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+        Zombie nearbyBystander = helper.spawn(EntityType.ZOMBIE, 14, 0, 0);
         Zombie attacker = helper.spawn(EntityType.ZOMBIE, 6, 0, 0);
 
         him.setTarget(attacker);
@@ -97,6 +98,35 @@ public final class HimCombatGameTests {
             HimTestState.removeHimForTest(helper, him);
             nearbyBystander.remove(Entity.RemovalReason.DISCARDED);
             attacker.remove(Entity.RemovalReason.DISCARDED);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "him_combat_external_target_non_enemy")
+    public static void himAcceptsExternalNonEnemyMobTargetAssignments(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        level.setDayTime(18000L);
+        HimEntity him = HimEntity.spawnForTest(level, helper.absolutePos(BlockPos.ZERO));
+        Zombie nearbyBystander = helper.spawn(EntityType.ZOMBIE, 14, 0, 0);
+        IronGolem directedTarget = helper.spawn(EntityType.IRON_GOLEM, 6, 0, 0);
+
+        him.setTarget(directedTarget);
+
+        helper.runAfterDelay(40, () -> {
+            helper.assertTrue(him.isAlive(), "Expected test Him to survive uniqueness registration");
+            helper.assertTrue(
+                    him.getTarget() == directedTarget || !directedTarget.isAlive(),
+                    "Expected Him to preserve the external non-Enemy mob target, target=" + him.getTarget() + ", directedTargetAlive=" + directedTarget.isAlive()
+            );
+            helper.assertTrue(
+                    nearbyBystander.isAlive(),
+                    "Expected uninvolved nearby hostile mob to stay alive under external non-Enemy targeting, bystanderHealth=" + nearbyBystander.getHealth() + ", target=" + him.getTarget()
+            );
+            helper.assertFalse(directedTarget.isAlive(), "Expected external non-Enemy mob target to be punished");
+            HimTestState.removeHimForTest(helper, him);
+            nearbyBystander.remove(Entity.RemovalReason.DISCARDED);
+            directedTarget.remove(Entity.RemovalReason.DISCARDED);
             helper.succeed();
         });
     }
