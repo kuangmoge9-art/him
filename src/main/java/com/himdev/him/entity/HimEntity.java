@@ -24,7 +24,6 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Enemy;
@@ -34,8 +33,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.Comparator;
 
 public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final DivinePunisher DIVINE_PUNISHER = new DivinePunisher();
@@ -67,6 +64,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private boolean pitEscapeUsesCruisePath;
     private double pitEscapeCruiseY;
     private HimPitEscapeFlight.FlightPhase pitEscapePhase;
+    private LivingEntity angerTarget;
     private int pitEscapeTicksRemaining;
     private int pitEscapeCooldownTicks;
     private boolean recoveringFromVoid;
@@ -105,14 +103,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.goalSelector.addGoal(7, new RandomStrollGoal(this, 0.9D));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 16.0F));
         this.goalSelector.addGoal(9, new RandomLookAroundGoal(this));
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
-                this,
-                LivingEntity.class,
-                10,
-                true,
-                false,
-                this::isValidCombatTarget
-        ));
     }
 
     @Override
@@ -167,6 +157,11 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        LivingEntity attacker = resolveAttacker(source);
+        if (isValidAngerTarget(attacker)) {
+            angerTarget = attacker;
+            this.setTarget(attacker);
+        }
         return false;
     }
 
@@ -350,9 +345,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setNoGravity(false);
         super.customServerAiStep();
 
-        if (!isValidCombatTarget(this.getTarget())) {
-            this.setTarget(findNearestHostileTarget());
-        }
+        synchronizeAngerTarget();
         environmentPressureTracker.sample(this);
         ENVIRONMENT_DOMINANCE.applyIfNeeded(this, environmentPressureTracker);
     }
@@ -368,12 +361,34 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         return target != null && target.isAlive() && target instanceof Enemy && !(target instanceof Player);
     }
 
-    private LivingEntity findNearestHostileTarget() {
+    private boolean isValidAngerTarget(LivingEntity target) {
+        if (!isValidCombatTarget(target) || target.level() != this.level()) {
+            return false;
+        }
         double followRange = this.getAttributeValue(Attributes.FOLLOW_RANGE);
-        return this.level().getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(followRange), this::isValidCombatTarget)
-                .stream()
-                .min(Comparator.comparingDouble(this::distanceToSqr))
-                .orElse(null);
+        return this.distanceToSqr(target) <= followRange * followRange;
+    }
+
+    private LivingEntity resolveAttacker(DamageSource source) {
+        Entity sourceEntity = source.getEntity();
+        if (sourceEntity instanceof LivingEntity livingEntity) {
+            return livingEntity;
+        }
+
+        Entity directEntity = source.getDirectEntity();
+        if (directEntity instanceof LivingEntity livingEntity) {
+            return livingEntity;
+        }
+        return null;
+    }
+
+    private void synchronizeAngerTarget() {
+        if (!isValidAngerTarget(angerTarget)) {
+            angerTarget = null;
+        }
+        if (this.getTarget() != angerTarget) {
+            this.setTarget(angerTarget);
+        }
     }
 
     private boolean shouldRecoverFromVoid() {
@@ -385,7 +400,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     }
 
     public boolean hasAvailableHostileTarget() {
-        return isValidCombatTarget(this.getTarget()) || findNearestHostileTarget() != null;
+        return angerTarget != null;
     }
 
     public boolean isUnderEnvironmentEscapePressure() {

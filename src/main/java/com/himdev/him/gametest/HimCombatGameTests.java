@@ -20,21 +20,54 @@ public final class HimCombatGameTests {
     private HimCombatGameTests() {
     }
 
-    @GameTest(template = "empty", batch = "him_combat_hostile")
-    public static void himAttacksNearbyHostileMob(GameTestHelper helper) {
+    @GameTest(template = "empty", batch = "him_combat_passive")
+    public static void himDoesNotAttackNearbyHostileMobWithoutAnger(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         helper.getLevel().setDayTime(18000L);
         HimEntity him = HimEntity.spawnForTest(helper.getLevel(), helper.absolutePos(BlockPos.ZERO));
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, 4, 0, 0);
 
-        helper.runAfterDelay(20, () -> {
+        helper.runAfterDelay(40, () -> {
             helper.assertTrue(him.isAlive(), "Expected test Him to survive uniqueness registration");
             helper.assertTrue(
-                    him.getTarget() == zombie || !zombie.isAlive(),
-                    "Expected Him to attack the nearby hostile mob, target=" + him.getTarget() + ", zombieAlive=" + zombie.isAlive() + ", zombieHealth=" + zombie.getHealth()
+                    zombie.isAlive(),
+                    "Expected nearby hostile mob to remain alive until it angers Him, zombieHealth=" + zombie.getHealth() + ", target=" + him.getTarget()
             );
-            him.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
+            helper.assertTrue(
+                    him.getTarget() == null,
+                    "Expected Him to stay passive without anger, target=" + him.getTarget()
+            );
+            HimTestState.removeHimForTest(helper, him);
             zombie.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "him_combat_anger_target")
+    public static void himAttacksOnlyHostileMobThatAngeredHim(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        level.setDayTime(18000L);
+        HimEntity him = HimEntity.spawnForTest(level, helper.absolutePos(BlockPos.ZERO));
+        Zombie nearbyBystander = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+        Zombie attacker = helper.spawn(EntityType.ZOMBIE, 6, 0, 0);
+
+        him.hurt(level.damageSources().mobAttack(attacker), 5.0F);
+
+        helper.runAfterDelay(40, () -> {
+            helper.assertTrue(him.isAlive(), "Expected test Him to survive uniqueness registration");
+            helper.assertTrue(
+                    him.getTarget() == attacker || !attacker.isAlive(),
+                    "Expected Him to lock onto the mob that angered him, target=" + him.getTarget() + ", attackerAlive=" + attacker.isAlive()
+            );
+            helper.assertTrue(
+                    nearbyBystander.isAlive(),
+                    "Expected uninvolved nearby hostile mob to stay alive, bystanderHealth=" + nearbyBystander.getHealth() + ", target=" + him.getTarget()
+            );
+            helper.assertFalse(attacker.isAlive(), "Expected anger target to be punished");
+            HimTestState.removeHimForTest(helper, him);
+            nearbyBystander.remove(Entity.RemovalReason.DISCARDED);
+            attacker.remove(Entity.RemovalReason.DISCARDED);
             helper.succeed();
         });
     }
@@ -66,6 +99,7 @@ public final class HimCombatGameTests {
         HimTestState.buildAwkwardPursuitCourse(helper, origin);
         HimEntity him = HimEntity.spawnForTest(level, origin);
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+        him.hurt(level.damageSources().mobAttack(zombie), 5.0F);
 
         helper.runAfterDelay(40, () -> {
             if (zombie.isAlive()) {
