@@ -283,6 +283,15 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     }
 
     @Override
+    public boolean canBeLeashed(Player player) {
+        return false;
+    }
+
+    @Override
+    public void setLeashedTo(Entity entity, boolean sendPacket) {
+    }
+
+    @Override
     protected boolean canAddPassenger(Entity passenger) {
         return false;
     }
