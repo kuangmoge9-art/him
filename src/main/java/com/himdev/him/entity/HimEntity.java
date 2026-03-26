@@ -338,6 +338,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.clearFire();
         this.removeAllEffects();
         this.fallDistance = 0.0F;
+
         updateVoidRecoveryState();
 
         if (shouldRecoverFromVoid()) {
