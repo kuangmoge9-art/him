@@ -10,8 +10,12 @@ import com.himdev.him.guardian.DivinePunisher;
 import com.himdev.him.registry.HimEntityTypes;
 import com.himdev.him.util.HimLog;
 import com.himdev.him.world.HimLocator;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
@@ -26,6 +30,7 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -33,10 +38,17 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.UUID;
+
 public class HimEntity extends PathfinderMob implements RangedAttackMob {
+    private static final EntityDataAccessor<Integer> RESCUE_EXECUTION_VICTIM_ID =
+            SynchedEntityData.defineId(HimEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> RESCUE_EXECUTION_VISUAL_ACTIVE =
+            SynchedEntityData.defineId(HimEntity.class, EntityDataSerializers.BOOLEAN);
     private static final DivinePunisher DIVINE_PUNISHER = new DivinePunisher();
     private static final HimEnvironmentDominance ENVIRONMENT_DOMINANCE = new HimEnvironmentDominance();
     private static final HimPitEscapeFlight PIT_ESCAPE_FLIGHT = new HimPitEscapeFlight();
+    private static final int NO_RESCUE_VICTIM = -1;
     private static final double VOID_RECOVERY_SPEED = 2.0D;
     private static final int VOID_TRIGGER_DEPTH = 4;
     private static final int VOID_SAFE_OFFSET = 8;
@@ -58,6 +70,12 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             {0, 2},
             {0, -2}
     };
+    private enum RescueExecutionPhase {
+        IDLE,
+        HOLDING,
+        RETURNING
+    }
+
     private final HimEnvironmentPressureTracker environmentPressureTracker = new HimEnvironmentPressureTracker();
     private Vec3 pitEscapeLanding;
     private boolean pitEscapeUsesCruisePath;
@@ -69,6 +87,14 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private boolean recoveringFromVoid;
     private boolean removalAuthorizedInProgress;
     private boolean deltaMovementUpdateAuthorizedInProgress;
+    private RescueExecutionPhase rescueExecutionPhase = RescueExecutionPhase.IDLE;
+    private UUID rescueExecutionTargetId;
+    private Vec3 rescueReturnPos;
+    private float rescueReturnYRot;
+    private float rescueReturnXRot;
+    private int rescueExecutionTicksRemaining;
+    private boolean rescueVictimNoGravity;
+    private boolean rescueVictimInvisible;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -91,6 +117,13 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         him.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
         level.addFreshEntity(him);
         return him;
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(RESCUE_EXECUTION_VICTIM_ID, NO_RESCUE_VICTIM);
+        this.entityData.define(RESCUE_EXECUTION_VISUAL_ACTIVE, false);
     }
 
     @Override
@@ -339,6 +372,11 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.removeAllEffects();
         this.fallDistance = 0.0F;
 
+        if (level() instanceof ServerLevel serverLevel && tickRescueExecution(serverLevel)) {
+            environmentPressureTracker.resetAfterCorrection(this);
+            return;
+        }
+
         updateVoidRecoveryState();
 
         if (shouldRecoverFromVoid()) {
@@ -381,12 +419,53 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         }
     }
 
+    public boolean startRescueExecution(LivingEntity target, Vec3 stagingPoint, int holdTicks) {
+        if (holdTicks <= 0 || isInRescueExecution() || !isValidRescueExecutionTarget(target) || target.level() != this.level()) {
+            return false;
+        }
+
+        rescueReturnPos = this.position();
+        rescueReturnYRot = this.getYRot();
+        rescueReturnXRot = this.getXRot();
+        rescueExecutionTargetId = target.getUUID();
+        rescueExecutionTicksRemaining = holdTicks;
+        rescueVictimNoGravity = target.isNoGravity();
+        rescueVictimInvisible = target.isInvisible();
+        rescueExecutionPhase = RescueExecutionPhase.HOLDING;
+        this.getNavigation().stop();
+        this.setTarget(null);
+        this.setNoGravity(true);
+        this.setDeltaMovement(Vec3.ZERO);
+        target.setInvisible(true);
+        this.moveTo(stagingPoint.x, stagingPoint.y, stagingPoint.z, this.getYRot(), this.getXRot());
+        faceRescueVictim(target);
+        setRescueExecutionVictimId(target.getId());
+        setRescueExecutionVisualActive(true);
+        return true;
+    }
+
+    public boolean isInRescueExecution() {
+        return rescueExecutionPhase != RescueExecutionPhase.IDLE;
+    }
+
+    public int rescueExecutionVictimId() {
+        return this.entityData.get(RESCUE_EXECUTION_VICTIM_ID);
+    }
+
+    public boolean isRescueExecutionVisualActive() {
+        return this.entityData.get(RESCUE_EXECUTION_VISUAL_ACTIVE);
+    }
+
     private boolean isValidCombatTarget(LivingEntity target) {
         return target != null
                 && target.isAlive()
                 && target != this
                 && target instanceof Mob
                 && !(target instanceof Player);
+    }
+
+    private boolean isValidRescueExecutionTarget(LivingEntity target) {
+        return isValidCombatTarget(target) && target instanceof Enemy;
     }
 
     private boolean isValidAngerTarget(LivingEntity target) {
@@ -421,6 +500,37 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     private boolean shouldRecoverFromVoid() {
         return recoveringFromVoid;
+    }
+
+    private boolean tickRescueExecution(ServerLevel level) {
+        if (!isInRescueExecution()) {
+            return false;
+        }
+        if (rescueExecutionPhase == RescueExecutionPhase.RETURNING) {
+            return finishRescueExecution(null);
+        }
+
+        LivingEntity victim = resolveRescueExecutionVictim(level);
+        if (rescueExecutionPhase != RescueExecutionPhase.HOLDING || victim == null || !victim.isAlive()) {
+            return finishRescueExecution(victim);
+        }
+
+        this.getNavigation().stop();
+        this.setTarget(null);
+        this.setNoGravity(true);
+        this.setDeltaMovement(Vec3.ZERO);
+        this.fallDistance = 0.0F;
+        faceRescueVictim(victim);
+        victim.setInvisible(true);
+        anchorRescueVictim(victim, rescueExecutionVictimAnchor());
+
+        rescueExecutionTicksRemaining--;
+        if (rescueExecutionTicksRemaining <= 0) {
+            rescueExecutionPhase = RescueExecutionPhase.RETURNING;
+            DIVINE_PUNISHER.punish(level, victim);
+            return finishRescueExecution(victim);
+        }
+        return true;
     }
 
     public boolean isRecoveringFromVoidState() {
@@ -619,6 +729,85 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         }
     }
 
+    private LivingEntity resolveRescueExecutionVictim(ServerLevel level) {
+        if (rescueExecutionTargetId == null) {
+            return null;
+        }
+        Entity entity = level.getEntity(rescueExecutionTargetId);
+        return entity instanceof LivingEntity living && !living.isRemoved() ? living : null;
+    }
+
+    private void anchorRescueVictim(LivingEntity victim, Vec3 anchor) {
+        if (victim instanceof Mob mob) {
+            mob.getNavigation().stop();
+            mob.setTarget(null);
+        }
+        victim.setNoGravity(true);
+        victim.setDeltaMovement(Vec3.ZERO);
+        victim.fallDistance = 0.0F;
+        victim.moveTo(anchor.x, anchor.y, anchor.z, victim.getYRot(), victim.getXRot());
+    }
+
+    private Vec3 rescueExecutionVictimAnchor() {
+        Vec3 forward = horizontalFacingVector(this.getYRot());
+        Vec3 right = new Vec3(-forward.z, 0.0D, forward.x);
+        return this.position()
+                .add(forward.scale(0.25D))
+                .add(right.scale(0.55D))
+                .add(0.0D, 1.45D, 0.0D);
+    }
+
+    private Vec3 horizontalFacingVector(float yawDegrees) {
+        float yawRadians = yawDegrees * ((float) Math.PI / 180.0F);
+        return new Vec3(-Mth.sin(yawRadians), 0.0D, Mth.cos(yawRadians)).normalize();
+    }
+
+    private void faceRescueVictim(LivingEntity victim) {
+        Vec3 delta = victim.getEyePosition().subtract(this.getEyePosition());
+        double horizontalDistance = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
+        if (horizontalDistance < 1.0E-5D && Math.abs(delta.y) < 1.0E-5D) {
+            return;
+        }
+
+        float targetYRot = (float) (Mth.atan2(delta.z, delta.x) * (180.0D / Math.PI)) - 90.0F;
+        float targetXRot = (float) (-(Mth.atan2(delta.y, horizontalDistance) * (180.0D / Math.PI)));
+        this.setYRot(targetYRot);
+        this.setXRot(targetXRot);
+        this.yHeadRot = targetYRot;
+        this.yBodyRot = targetYRot;
+    }
+
+    private boolean finishRescueExecution(LivingEntity victim) {
+        if (victim != null && !victim.isRemoved()) {
+            victim.setInvisible(rescueVictimInvisible);
+            if (victim.isAlive()) {
+                victim.setNoGravity(rescueVictimNoGravity);
+                victim.setDeltaMovement(Vec3.ZERO);
+                victim.fallDistance = 0.0F;
+            }
+        }
+        if (rescueReturnPos != null) {
+            this.moveTo(rescueReturnPos.x, rescueReturnPos.y, rescueReturnPos.z, rescueReturnYRot, rescueReturnXRot);
+        }
+        this.setNoGravity(false);
+        this.setDeltaMovement(Vec3.ZERO);
+        clearRescueExecutionState();
+        return true;
+    }
+
+    private void clearRescueExecutionState() {
+        rescueExecutionPhase = RescueExecutionPhase.IDLE;
+        rescueExecutionTargetId = null;
+        rescueReturnPos = null;
+        rescueReturnYRot = 0.0F;
+        rescueReturnXRot = 0.0F;
+        rescueExecutionTicksRemaining = 0;
+        rescueVictimNoGravity = false;
+        rescueVictimInvisible = false;
+        setRescueExecutionVictimId(NO_RESCUE_VICTIM);
+        setRescueExecutionVisualActive(false);
+    }
+
     private void withAuthorizedDeltaMovementUpdates(Runnable action) {
         boolean previous = deltaMovementUpdateAuthorizedInProgress;
         deltaMovementUpdateAuthorizedInProgress = true;
@@ -627,5 +816,13 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         } finally {
             deltaMovementUpdateAuthorizedInProgress = previous;
         }
+    }
+
+    private void setRescueExecutionVictimId(int victimId) {
+        this.entityData.set(RESCUE_EXECUTION_VICTIM_ID, victimId);
+    }
+
+    private void setRescueExecutionVisualActive(boolean active) {
+        this.entityData.set(RESCUE_EXECUTION_VISUAL_ACTIVE, active);
     }
 }

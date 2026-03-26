@@ -1,5 +1,6 @@
 package com.himdev.him.world;
 
+import com.himdev.him.entity.HimEntity;
 import com.himdev.him.util.HimLog;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.MinecraftServer;
@@ -62,6 +63,30 @@ public final class HimLocator {
 
     public static boolean hasActiveHim(ServerLevel level) {
         return hasActiveHim(level.getServer(), currentHimId(level));
+    }
+
+    public static HimEntity activeHim(ServerLevel level) {
+        UUID himId = currentHimId(level);
+        if (himId == null) {
+            return null;
+        }
+
+        Entity sameLevelEntity = level.getEntity(himId);
+        if (sameLevelEntity instanceof HimEntity him && him.isAlive() && !him.isRemoved()) {
+            return him;
+        }
+
+        for (ServerLevel serverLevel : level.getServer().getAllLevels()) {
+            if (serverLevel == level) {
+                continue;
+            }
+            Entity entity = serverLevel.getEntity(himId);
+            if (entity instanceof HimEntity him && him.isAlive() && !him.isRemoved()) {
+                return him;
+            }
+        }
+
+        return null;
     }
 
     private static boolean tryRegisterInternal(MinecraftServer server, HimSavedData data, UUID himId) {

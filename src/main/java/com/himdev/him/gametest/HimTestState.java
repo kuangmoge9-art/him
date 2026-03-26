@@ -8,6 +8,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +44,16 @@ public final class HimTestState {
         if (currentHimId != null) {
             HimLocator.clear(helper.getLevel(), currentHimId);
         }
+    }
+
+    public static void cleanupEntity(Entity entity) {
+        if (entity != null && entity.isAlive() && !entity.isRemoved()) {
+            entity.remove(Entity.RemovalReason.DISCARDED);
+        }
+    }
+
+    public static Vec3 center(BlockPos pos) {
+        return Vec3.atCenterOf(pos);
     }
 
     public static void buildTightObstruction(GameTestHelper helper, BlockPos origin) {

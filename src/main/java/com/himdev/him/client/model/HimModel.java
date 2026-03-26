@@ -21,6 +21,26 @@ public final class HimModel extends HumanoidModel<HimEntity> {
         super(root);
     }
 
+    @Override
+    public void setupAnim(HimEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+        if (!entity.isRescueExecutionVisualActive()) {
+            return;
+        }
+
+        rightArm.xRot = -1.35F;
+        rightArm.yRot = -0.25F;
+        rightArm.zRot = 0.08F;
+        leftArm.xRot = 0.10F;
+        leftArm.yRot = 0.08F;
+        body.yRot = 0.12F;
+        rightLeg.xRot = 0.0F;
+        rightLeg.yRot = 0.0F;
+        leftLeg.xRot = 0.0F;
+        leftLeg.yRot = 0.0F;
+        head.yRot *= 0.5F;
+    }
+
     public static LayerDefinition createBodyLayer() {
         MeshDefinition meshDefinition = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);
         PartDefinition root = meshDefinition.getRoot();
