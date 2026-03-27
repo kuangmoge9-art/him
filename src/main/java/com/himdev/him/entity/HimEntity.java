@@ -518,6 +518,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setDeltaMovement(Vec3.ZERO);
         this.fallDistance = 0.0F;
         anchorRescueVictim(victim, rescueExecutionVictimAnchor(victim));
+        faceRescueVictimTowardHim(victim);
         faceRescueVictim(victim);
 
         rescueExecutionTicksRemaining--;
@@ -770,6 +771,25 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setXRot(targetXRot);
         this.yHeadRot = targetYRot;
         this.yBodyRot = targetYRot;
+    }
+
+    private void faceRescueVictimTowardHim(LivingEntity victim) {
+        Vec3 delta = this.getEyePosition().subtract(victim.getEyePosition());
+        double horizontalDistance = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
+        if (horizontalDistance < 1.0E-5D && Math.abs(delta.y) < 1.0E-5D) {
+            return;
+        }
+
+        float targetYRot = (float) (Mth.atan2(delta.z, delta.x) * (180.0D / Math.PI)) - 90.0F;
+        float targetXRot = (float) (-(Mth.atan2(delta.y, horizontalDistance) * (180.0D / Math.PI)));
+        victim.setYRot(targetYRot);
+        victim.yRotO = targetYRot;
+        victim.setXRot(targetXRot);
+        victim.xRotO = targetXRot;
+        victim.setYHeadRot(targetYRot);
+        victim.yHeadRotO = targetYRot;
+        victim.setYBodyRot(targetYRot);
+        victim.yBodyRotO = targetYRot;
     }
 
     private boolean finishRescueExecution(LivingEntity victim) {

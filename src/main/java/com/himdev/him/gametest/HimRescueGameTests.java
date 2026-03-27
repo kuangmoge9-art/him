@@ -81,6 +81,19 @@ public final class HimRescueGameTests {
                     horizontalForward.dot(horizontalToVictim) > 0.85D,
                     "Expected Him to face the held hostile directly during the choke-hold"
             );
+            Vec3 toHim = him.position().subtract(zombie.position());
+            Vec3 horizontalToHim = new Vec3(toHim.x, 0.0D, toHim.z).normalize();
+            Vec3 victimBodyForward = Vec3.directionFromRotation(0.0F, zombie.getYRot());
+            Vec3 victimHorizontalForward = new Vec3(victimBodyForward.x, 0.0D, victimBodyForward.z).normalize();
+            helper.assertTrue(
+                    victimHorizontalForward.dot(horizontalToHim) > 0.85D,
+                    "Expected held hostile body to face Him during the choke-hold"
+            );
+            Vec3 eyeToHim = him.getEyePosition().subtract(zombie.getEyePosition()).normalize();
+            helper.assertTrue(
+                    zombie.getLookAngle().normalize().dot(eyeToHim) > 0.90D,
+                    "Expected held hostile eyes to lock onto Him during the choke-hold"
+            );
         });
 
         helper.runAfterDelay(24, () -> {
@@ -138,6 +151,47 @@ public final class HimRescueGameTests {
             helper.assertFalse(him.isInRescueExecution(), "Expected rescue execution state to clear when held victim disappears");
             helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected rescue execution visuals to clear when held victim disappears");
             helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to return to the original position after victim loss");
+            HimTestState.removeHimForTest(helper, him);
+            HimTestState.cleanupEntity(player);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "him_rescue_execution_orientation", timeoutTicks = 240)
+    public static void himForcesHeldHostileToFaceHim(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        BlockPos himOrigin = helper.absolutePos(new BlockPos(-4, 0, 0));
+        HimEntity him = HimEntity.spawnForTest(level, himOrigin);
+        Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(0, 0, 0));
+        Zombie zombie = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+
+        zombie.setNoAi(true);
+        zombie.setYRot(180.0F);
+        zombie.setXRot(20.0F);
+
+        player.setHealth(1.0F);
+        player.hurt(level.damageSources().mobAttack(zombie), 20.0F);
+
+        helper.runAfterDelay(6, () -> {
+            helper.assertTrue(him.isInRescueExecution(), "Expected rescue execution to be active in orientation lock test");
+            Vec3 toHim = him.position().subtract(zombie.position());
+            Vec3 horizontalToHim = new Vec3(toHim.x, 0.0D, toHim.z).normalize();
+            Vec3 victimBodyForward = Vec3.directionFromRotation(0.0F, zombie.getYRot());
+            Vec3 victimHorizontalForward = new Vec3(victimBodyForward.x, 0.0D, victimBodyForward.z).normalize();
+            helper.assertTrue(
+                    victimHorizontalForward.dot(horizontalToHim) > 0.90D,
+                    "Expected held hostile body to face Him even when victim AI is disabled"
+            );
+            Vec3 eyeToHim = him.getEyePosition().subtract(zombie.getEyePosition()).normalize();
+            helper.assertTrue(
+                    zombie.getLookAngle().normalize().dot(eyeToHim) > 0.93D,
+                    "Expected held hostile eyes to lock onto Him even when victim AI is disabled"
+            );
+        });
+
+        helper.runAfterDelay(24, () -> {
+            helper.assertFalse(zombie.isAlive(), "Expected orientation lock test victim to be executed");
             HimTestState.removeHimForTest(helper, him);
             HimTestState.cleanupEntity(player);
             helper.succeed();
