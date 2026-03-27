@@ -55,6 +55,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final int VOID_RECOVERY_SEARCH_HEIGHT = 24;
     private static final int PIT_ESCAPE_MAX_TICKS = 40;
     private static final int PIT_ESCAPE_COOLDOWN_TICKS = 20;
+    private static final double RESCUE_EXECUTION_ASCENT_PER_TICK = 0.08D;
+    private static final double RESCUE_EXECUTION_ASCENT_MAX_HEIGHT = 2.4D;
     private static final int[][] VOID_RECOVERY_SEARCH_OFFSETS = new int[][] {
             {0, 0},
             {1, 0},
@@ -94,6 +96,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private float rescueReturnXRot;
     private int rescueExecutionTicksRemaining;
     private boolean rescueVictimNoGravity;
+    private double rescueExecutionStartY;
+    private double rescueExecutionMaxY;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -435,6 +439,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setNoGravity(true);
         this.setDeltaMovement(Vec3.ZERO);
         this.moveTo(stagingPoint.x, stagingPoint.y, stagingPoint.z, this.getYRot(), this.getXRot());
+        rescueExecutionStartY = this.getY();
+        rescueExecutionMaxY = rescueExecutionStartY + RESCUE_EXECUTION_ASCENT_MAX_HEIGHT;
         faceRescueVictim(target);
         setRescueExecutionVictimId(target.getId());
         setRescueExecutionVisualActive(true);
@@ -517,6 +523,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setNoGravity(true);
         this.setDeltaMovement(Vec3.ZERO);
         this.fallDistance = 0.0F;
+        riseRescueExecutionHold();
         anchorRescueVictim(victim, rescueExecutionVictimAnchor(victim));
         faceRescueVictimTowardHim(victim);
         faceRescueVictim(victim);
@@ -753,6 +760,13 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
                 .add(0.0D, 0.05D, 0.0D);
     }
 
+    private void riseRescueExecutionHold() {
+        double nextY = Math.min(this.getY() + RESCUE_EXECUTION_ASCENT_PER_TICK, rescueExecutionMaxY);
+        if (nextY > this.getY() + 1.0E-5D) {
+            this.moveTo(this.getX(), nextY, this.getZ(), this.getYRot(), this.getXRot());
+        }
+    }
+
     private Vec3 horizontalFacingVector(float yawDegrees) {
         float yawRadians = yawDegrees * ((float) Math.PI / 180.0F);
         return new Vec3(-Mth.sin(yawRadians), 0.0D, Mth.cos(yawRadians)).normalize();
@@ -766,11 +780,14 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         }
 
         float targetYRot = (float) (Mth.atan2(delta.z, delta.x) * (180.0D / Math.PI)) - 90.0F;
-        float targetXRot = (float) (-(Mth.atan2(delta.y, horizontalDistance) * (180.0D / Math.PI)));
         this.setYRot(targetYRot);
-        this.setXRot(targetXRot);
+        this.yRotO = targetYRot;
+        this.setXRot(0.0F);
+        this.xRotO = 0.0F;
         this.yHeadRot = targetYRot;
+        this.yHeadRotO = targetYRot;
         this.yBodyRot = targetYRot;
+        this.yBodyRotO = targetYRot;
     }
 
     private void faceRescueVictimTowardHim(LivingEntity victim) {
@@ -817,6 +834,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         rescueReturnXRot = 0.0F;
         rescueExecutionTicksRemaining = 0;
         rescueVictimNoGravity = false;
+        rescueExecutionStartY = 0.0D;
+        rescueExecutionMaxY = 0.0D;
         setRescueExecutionVictimId(NO_RESCUE_VICTIM);
         setRescueExecutionVisualActive(false);
     }

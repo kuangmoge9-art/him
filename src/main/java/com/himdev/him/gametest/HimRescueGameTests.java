@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Ravager;
@@ -61,6 +62,7 @@ public final class HimRescueGameTests {
         HimEntity him = HimEntity.spawnForTest(level, himOrigin);
         Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(0, 0, 0));
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+        double rescueStartY = zombie.getY();
 
         player.setHealth(1.0F);
         player.hurt(level.damageSources().mobAttack(zombie), 20.0F);
@@ -73,6 +75,15 @@ public final class HimRescueGameTests {
             helper.assertTrue(him.isRescueExecutionVisualActive(), "Expected Him rescue execution visuals to activate");
             helper.assertTrue(him.distanceToSqr(zombie) < 4.0D, "Expected Him to teleport near the hostile target");
             helper.assertTrue(him.distanceToSqr(zombie) > 0.36D, "Expected held hostile to keep a small visible gap from Him");
+            helper.assertTrue(him.getY() > rescueStartY + 0.15D, "Expected Him to lift the rescue hold upward instead of staying at ground height");
+            helper.assertTrue(zombie.getY() > rescueStartY + 0.15D, "Expected held hostile to rise together with Him during the rescue hold");
+            helper.assertTrue(him.getY() < rescueStartY + 2.8D, "Expected rescue ascent to stay low and not fly too high");
+            helper.assertTrue(Math.abs(him.getY() - zombie.getY()) < 0.45D, "Expected Him and the held hostile to keep nearly the same hover altitude");
+            helper.assertTrue(Math.abs(him.getXRot()) < 1.0F, "Expected Him head pitch to stay stable during the rescue hold");
+            helper.assertTrue(
+                    Math.abs(Mth.wrapDegrees(him.getYHeadRot() - him.getYRot())) < 1.0F,
+                    "Expected Him head yaw to stay locked with body and not wobble during the rescue hold"
+            );
             helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) > 1.0D, "Expected Him to leave the original position during rescue execution");
             Vec3 toVictim = zombie.position().subtract(him.position());
             Vec3 horizontalToVictim = new Vec3(toVictim.x, 0.0D, toVictim.z).normalize();

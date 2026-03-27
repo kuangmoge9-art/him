@@ -34,11 +34,14 @@ public final class HimModel extends HumanoidModel<HimEntity> {
         leftArm.xRot = 0.10F;
         leftArm.yRot = 0.08F;
         body.yRot = 0.12F;
+        head.xRot = 0.0F;
+        head.yRot = 0.0F;
+        head.zRot = 0.0F;
+        hat.copyFrom(head);
         rightLeg.xRot = 0.0F;
         rightLeg.yRot = 0.0F;
         leftLeg.xRot = 0.0F;
         leftLeg.yRot = 0.0F;
-        head.yRot *= 0.5F;
     }
 
     public static LayerDefinition createBodyLayer() {
