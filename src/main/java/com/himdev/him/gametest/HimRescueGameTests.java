@@ -53,7 +53,7 @@ public final class HimRescueGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_rescue_execution_normal", timeoutTicks = 240)
-    public static void himDirectlyPunishesNormalHostileRescue(GameTestHelper helper) {
+    public static void himGrabExecutesNormalHostileRescue(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         BlockPos himOrigin = helper.absolutePos(new BlockPos(-4, 0, 0));
@@ -66,10 +66,18 @@ public final class HimRescueGameTests {
 
         helper.runAfterDelay(6, () -> {
             helper.assertTrue(player.isAlive(), "Expected rescue to keep the player alive");
-            helper.assertFalse(zombie.isAlive(), "Expected rescue punishment to directly kill normal-sized hostile targets");
-            helper.assertFalse(him.isInRescueExecution(), "Expected direct punishment path to keep rescue execution disabled");
-            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected direct punishment path to keep rescue visuals disabled");
-            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to stay at the original position during direct rescue punishment");
+            helper.assertTrue(zombie.isAlive(), "Expected normal hostile to remain alive during the choke-hold window");
+            helper.assertTrue(him.isInRescueExecution(), "Expected Him rescue execution state to activate");
+            helper.assertTrue(him.isRescueExecutionVisualActive(), "Expected Him rescue execution visuals to activate");
+            helper.assertTrue(him.distanceToSqr(zombie) < 4.0D, "Expected Him to teleport near the hostile target");
+            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) > 1.0D, "Expected Him to leave the original position during rescue execution");
+        });
+
+        helper.runAfterDelay(36, () -> {
+            helper.assertFalse(zombie.isAlive(), "Expected rescue execution to kill the held hostile after the hold window");
+            helper.assertFalse(him.isInRescueExecution(), "Expected rescue execution state to clear after execution");
+            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected rescue execution visuals to clear after execution");
+            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to return to the original position after execution");
             HimTestState.removeHimForTest(helper, him);
             HimTestState.cleanupEntity(player);
             helper.succeed();
@@ -100,7 +108,7 @@ public final class HimRescueGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_rescue_execution_cleanup", timeoutTicks = 240)
-    public static void himNeverEntersRescueExecutionDuringNormalRescuePunishment(GameTestHelper helper) {
+    public static void himClearsRescueStateWhenHeldVictimDisappears(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         BlockPos himOrigin = helper.absolutePos(new BlockPos(-4, 0, 0));
@@ -111,11 +119,15 @@ public final class HimRescueGameTests {
         player.setHealth(1.0F);
         player.hurt(level.damageSources().mobAttack(zombie), 20.0F);
 
+        helper.runAfterDelay(6, () -> {
+            helper.assertTrue(him.isInRescueExecution(), "Expected rescue execution to start before victim loss");
+            zombie.remove(Entity.RemovalReason.DISCARDED);
+        });
+
         helper.runAfterDelay(12, () -> {
-            helper.assertFalse(zombie.isAlive(), "Expected normal rescue punishment target to die without a staged hold");
-            helper.assertFalse(him.isInRescueExecution(), "Expected normal rescue punishment to avoid rescue execution state");
-            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected normal rescue punishment to avoid rescue execution visuals");
-            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to stay at the original position during direct rescue punishment");
+            helper.assertFalse(him.isInRescueExecution(), "Expected rescue execution state to clear when held victim disappears");
+            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected rescue execution visuals to clear when held victim disappears");
+            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to return to the original position after victim loss");
             HimTestState.removeHimForTest(helper, him);
             HimTestState.cleanupEntity(player);
             helper.succeed();
@@ -123,7 +135,7 @@ public final class HimRescueGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_rescue_execution_reentry", timeoutTicks = 300)
-    public static void himHandlesBackToBackRescuesWithDirectPunishment(GameTestHelper helper) {
+    public static void himHandlesBackToBackRescuesSafely(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         BlockPos himOrigin = helper.absolutePos(new BlockPos(-4, 0, 0));
@@ -136,15 +148,15 @@ public final class HimRescueGameTests {
         firstPlayer.setHealth(1.0F);
         secondPlayer.setHealth(1.0F);
         firstPlayer.hurt(level.damageSources().mobAttack(firstZombie), 20.0F);
-        secondPlayer.hurt(level.damageSources().mobAttack(secondZombie), 20.0F);
+        helper.runAfterDelay(4, () -> secondPlayer.hurt(level.damageSources().mobAttack(secondZombie), 20.0F));
 
         helper.runAfterDelay(40, () -> {
             helper.assertFalse(firstZombie.isAlive(), "Expected the first rescue victim to die");
-            helper.assertFalse(secondZombie.isAlive(), "Expected the second rescue path to stay lethal");
+            helper.assertFalse(secondZombie.isAlive(), "Expected the second rescue path to stay lethal even during active grab");
             helper.assertTrue(firstPlayer.isAlive() && secondPlayer.isAlive(), "Expected both rescues to succeed");
-            helper.assertFalse(him.isInRescueExecution(), "Expected back-to-back rescues to avoid rescue execution state");
-            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected back-to-back rescues to avoid rescue execution visuals");
-            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to remain at the original position after back-to-back direct punishments");
+            helper.assertFalse(him.isInRescueExecution(), "Expected rescue execution state to clear after back-to-back rescues");
+            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected rescue execution visuals to clear after back-to-back rescues");
+            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to remain at the original position after back-to-back rescues");
             HimTestState.removeHimForTest(helper, him);
             HimTestState.cleanupEntity(firstPlayer);
             HimTestState.cleanupEntity(secondPlayer);
