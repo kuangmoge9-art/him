@@ -64,6 +64,7 @@ public final class HimRescueGameTests {
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
         float[] holdYaw = new float[1];
 
+        zombie.setXRot(65.0F);
         player.setHealth(1.0F);
         player.hurt(level.damageSources().mobAttack(zombie), 20.0F);
 
@@ -81,6 +82,10 @@ public final class HimRescueGameTests {
             helper.assertTrue(
                     himOffset.x * zombieForward.x + himOffset.z * zombieForward.z > 0.2D,
                     "Expected Him to stage in front of the hostile instead of behind it"
+            );
+            helper.assertTrue(
+                    Math.abs(Mth.wrapDegrees(zombie.getXRot())) < 5.0F,
+                    "Expected held victim to be upright instead of keeping a downward head pitch"
             );
             holdYaw[0] = him.getYRot();
         });

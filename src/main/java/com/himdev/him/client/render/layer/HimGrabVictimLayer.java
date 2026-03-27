@@ -53,10 +53,17 @@ public final class HimGrabVictimLayer extends RenderLayer<HimEntity, HimModel> {
                 living.getBbHeight()
         );
         boolean invisible = living.isInvisible();
+        float previousXRot = living.getXRot();
+        float previousXRotO = living.xRotO;
         living.setInvisible(false);
+        // Rescue hold should render the victim looking level instead of inheriting stale combat pitch.
+        living.setXRot(0.0F);
+        living.xRotO = 0.0F;
         try {
             entityRenderDispatcher.render(living, 0.0D, 0.0D, 0.0D, 0.0F, partialTick, poseStack, buffer, packedLight);
         } finally {
+            living.setXRot(previousXRot);
+            living.xRotO = previousXRotO;
             living.setInvisible(invisible);
         }
         poseStack.popPose();

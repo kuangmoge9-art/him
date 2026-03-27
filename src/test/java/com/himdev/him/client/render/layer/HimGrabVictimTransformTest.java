@@ -49,6 +49,16 @@ final class HimGrabVictimTransformTest {
         );
     }
 
+    @Test
+    void heldVictimTransformDoesNotTiltVictimFaceTowardTheGround() {
+        Vector3f forward = heldVictimRenderPose(0.0F).last().normal().transform(new Vector3f(0.0F, 0.0F, 1.0F));
+
+        assertTrue(
+                Math.abs(forward.y) < 0.35F,
+                "Expected held victim facing to stay mostly level instead of pitching downward"
+        );
+    }
+
     private static PoseStack heldVictimRenderPose(float victimBodyYawDegrees) {
         PoseStack poseStack = new PoseStack();
         poseStack.scale(-1.0F, -1.0F, 1.0F);
