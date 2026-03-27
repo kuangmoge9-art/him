@@ -15,10 +15,13 @@ final class HimGrabVictimTransformTest {
     private static final float ZOMBIE_HEIGHT = 1.95F;
 
     @Test
-    void heldVictimTransformKeepsVictimUprightAfterHandRotation() {
+    void heldVictimTransformKeepsHeadAboveFeetAfterHandRotation() {
         PoseStack poseStack = heldVictimRenderPose(0.0F);
-        Vector3f upVector = poseStack.last().normal().transform(new Vector3f(0.0F, 1.0F, 0.0F));
-        assertTrue(upVector.y > 0.0F, "Expected held victim render transform to keep the victim upright");
+        Vector3f headToFeetVector = poseStack.last().normal().transform(new Vector3f(0.0F, 1.0F, 0.0F));
+        assertTrue(
+                headToFeetVector.y < 0.0F,
+                "Expected victim model head-to-feet direction to point downward in world space"
+        );
     }
 
     @Test
