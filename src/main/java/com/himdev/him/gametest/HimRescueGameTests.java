@@ -70,6 +70,12 @@ public final class HimRescueGameTests {
             helper.assertTrue(zombie.isAlive(), "Expected victim to remain alive during the grab hold window");
             helper.assertTrue(zombie.isInvisible(), "Expected held victim to be hidden while the grab render layer is active");
             helper.assertTrue(him.distanceToSqr(zombie) < 4.0D, "Expected Him to teleport to the hostile during rescue");
+            Vec3 zombieForward = zombie.getLookAngle();
+            Vec3 himOffset = him.position().subtract(zombie.position());
+            helper.assertTrue(
+                    himOffset.x * zombieForward.x + himOffset.z * zombieForward.z > 0.2D,
+                    "Expected Him to stage in front of the hostile instead of behind it"
+            );
         });
 
         helper.runAfterDelay(30, () -> {

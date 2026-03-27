@@ -11,7 +11,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.List;
 import java.util.UUID;
 
 public final class HimRescueExecutionController {
@@ -63,14 +62,8 @@ public final class HimRescueExecutionController {
 
     private Vec3 findStagingPoint(ServerLevel level, HimEntity him, LivingEntity target) {
         Vec3 forward = horizontalForward(target);
-        Vec3 lateral = new Vec3(-forward.z, 0.0D, forward.x);
-        List<Vec3> offsets = List.of(
-                forward.scale(-FORWARD_OFFSET),
-                forward.scale(-FORWARD_OFFSET).add(lateral.scale(0.6D)),
-                forward.scale(-FORWARD_OFFSET).add(lateral.scale(-0.6D))
-        );
 
-        for (Vec3 offset : offsets) {
+        for (Vec3 offset : HimRescueExecutionGeometry.stagingOffsets(forward)) {
             Vec3 candidate = target.position().add(offset.x, 0.0D, offset.z);
             Vec3 safePoint = findSafeFeetPosition(level, him, candidate, target.getY());
             if (safePoint != null) {
