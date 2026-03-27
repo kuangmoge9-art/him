@@ -12,6 +12,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Ravager;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -72,6 +73,14 @@ public final class HimRescueGameTests {
             helper.assertTrue(him.isRescueExecutionVisualActive(), "Expected Him rescue execution visuals to activate");
             helper.assertTrue(him.distanceToSqr(zombie) < 4.0D, "Expected Him to teleport near the hostile target");
             helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) > 1.0D, "Expected Him to leave the original position during rescue execution");
+            Vec3 toVictim = zombie.position().subtract(him.position());
+            Vec3 horizontalToVictim = new Vec3(toVictim.x, 0.0D, toVictim.z).normalize();
+            Vec3 himForward = Vec3.directionFromRotation(0.0F, him.getYRot());
+            Vec3 horizontalForward = new Vec3(himForward.x, 0.0D, himForward.z).normalize();
+            helper.assertTrue(
+                    horizontalForward.dot(horizontalToVictim) > 0.85D,
+                    "Expected Him to face the held hostile directly during the choke-hold"
+            );
         });
 
         helper.runAfterDelay(24, () -> {

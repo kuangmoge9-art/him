@@ -517,7 +517,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setNoGravity(true);
         this.setDeltaMovement(Vec3.ZERO);
         this.fallDistance = 0.0F;
-        anchorRescueVictim(victim, rescueExecutionVictimAnchor());
+        anchorRescueVictim(victim, rescueExecutionVictimAnchor(victim));
+        faceRescueVictim(victim);
 
         rescueExecutionTicksRemaining--;
         if (rescueExecutionTicksRemaining <= 0) {
@@ -743,12 +744,11 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         victim.moveTo(anchor.x, anchor.y, anchor.z, victim.getYRot(), victim.getXRot());
     }
 
-    private Vec3 rescueExecutionVictimAnchor() {
+    private Vec3 rescueExecutionVictimAnchor(LivingEntity victim) {
         Vec3 forward = horizontalFacingVector(this.getYRot());
-        Vec3 right = new Vec3(-forward.z, 0.0D, forward.x);
+        double forwardOffset = Math.max(0.32D, ((this.getBbWidth() + victim.getBbWidth()) * 0.5D) - 0.08D);
         return this.position()
-                .add(forward.scale(0.25D))
-                .add(right.scale(0.55D))
+                .add(forward.scale(forwardOffset))
                 .add(0.0D, 0.05D, 0.0D);
     }
 
