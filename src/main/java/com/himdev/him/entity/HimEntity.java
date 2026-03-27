@@ -747,7 +747,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     private Vec3 rescueExecutionVictimAnchor(LivingEntity victim) {
         Vec3 forward = horizontalFacingVector(this.getYRot());
-        double forwardOffset = Math.max(0.32D, ((this.getBbWidth() + victim.getBbWidth()) * 0.5D) - 0.08D);
+        double forwardOffset = Math.max(0.6D, ((this.getBbWidth() + victim.getBbWidth()) * 0.5D) + 0.12D);
         return this.position()
                 .add(forward.scale(forwardOffset))
                 .add(0.0D, 0.05D, 0.0D);

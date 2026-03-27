@@ -72,6 +72,7 @@ public final class HimRescueGameTests {
             helper.assertTrue(him.isInRescueExecution(), "Expected Him rescue execution state to activate");
             helper.assertTrue(him.isRescueExecutionVisualActive(), "Expected Him rescue execution visuals to activate");
             helper.assertTrue(him.distanceToSqr(zombie) < 4.0D, "Expected Him to teleport near the hostile target");
+            helper.assertTrue(him.distanceToSqr(zombie) > 0.36D, "Expected held hostile to keep a small visible gap from Him");
             helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) > 1.0D, "Expected Him to leave the original position during rescue execution");
             Vec3 toVictim = zombie.position().subtract(him.position());
             Vec3 horizontalToVictim = new Vec3(toVictim.x, 0.0D, toVictim.z).normalize();
