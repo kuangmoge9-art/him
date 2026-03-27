@@ -41,6 +41,9 @@ public final class HimGrabVictimLayer extends RenderLayer<HimEntity, HimModel> {
         if (!(victim instanceof LivingEntity living) || !living.isAlive() || living == him) {
             return;
         }
+        if (!living.isInvisible()) {
+            return;
+        }
 
         poseStack.pushPose();
         getParentModel().translateToHand(HumanoidArm.RIGHT, poseStack);

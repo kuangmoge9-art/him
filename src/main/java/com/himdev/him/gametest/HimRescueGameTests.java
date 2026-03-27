@@ -67,13 +67,14 @@ public final class HimRescueGameTests {
         helper.runAfterDelay(6, () -> {
             helper.assertTrue(player.isAlive(), "Expected rescue to keep the player alive");
             helper.assertTrue(zombie.isAlive(), "Expected normal hostile to remain alive during the choke-hold window");
+            helper.assertFalse(zombie.isInvisible(), "Expected held hostile to keep its original visible body instead of switching to a transformed render copy");
             helper.assertTrue(him.isInRescueExecution(), "Expected Him rescue execution state to activate");
             helper.assertTrue(him.isRescueExecutionVisualActive(), "Expected Him rescue execution visuals to activate");
             helper.assertTrue(him.distanceToSqr(zombie) < 4.0D, "Expected Him to teleport near the hostile target");
             helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) > 1.0D, "Expected Him to leave the original position during rescue execution");
         });
 
-        helper.runAfterDelay(36, () -> {
+        helper.runAfterDelay(24, () -> {
             helper.assertFalse(zombie.isAlive(), "Expected rescue execution to kill the held hostile after the hold window");
             helper.assertFalse(him.isInRescueExecution(), "Expected rescue execution state to clear after execution");
             helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected rescue execution visuals to clear after execution");

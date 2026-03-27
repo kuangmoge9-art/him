@@ -94,7 +94,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private float rescueReturnXRot;
     private int rescueExecutionTicksRemaining;
     private boolean rescueVictimNoGravity;
-    private boolean rescueVictimInvisible;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -430,13 +429,11 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         rescueExecutionTargetId = target.getUUID();
         rescueExecutionTicksRemaining = holdTicks;
         rescueVictimNoGravity = target.isNoGravity();
-        rescueVictimInvisible = target.isInvisible();
         rescueExecutionPhase = RescueExecutionPhase.HOLDING;
         this.getNavigation().stop();
         this.setTarget(null);
         this.setNoGravity(true);
         this.setDeltaMovement(Vec3.ZERO);
-        target.setInvisible(true);
         this.moveTo(stagingPoint.x, stagingPoint.y, stagingPoint.z, this.getYRot(), this.getXRot());
         faceRescueVictim(target);
         setRescueExecutionVictimId(target.getId());
@@ -520,7 +517,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setNoGravity(true);
         this.setDeltaMovement(Vec3.ZERO);
         this.fallDistance = 0.0F;
-        victim.setInvisible(true);
         anchorRescueVictim(victim, rescueExecutionVictimAnchor());
 
         rescueExecutionTicksRemaining--;
@@ -778,7 +774,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     private boolean finishRescueExecution(LivingEntity victim) {
         if (victim != null && !victim.isRemoved()) {
-            victim.setInvisible(rescueVictimInvisible);
             if (victim.isAlive()) {
                 victim.setNoGravity(rescueVictimNoGravity);
                 victim.setDeltaMovement(Vec3.ZERO);
@@ -802,7 +797,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         rescueReturnXRot = 0.0F;
         rescueExecutionTicksRemaining = 0;
         rescueVictimNoGravity = false;
-        rescueVictimInvisible = false;
         setRescueExecutionVictimId(NO_RESCUE_VICTIM);
         setRescueExecutionVisualActive(false);
     }
