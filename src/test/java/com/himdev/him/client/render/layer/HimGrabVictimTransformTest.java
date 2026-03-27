@@ -15,24 +15,27 @@ final class HimGrabVictimTransformTest {
     private static final float ZOMBIE_HEIGHT = 1.95F;
 
     @Test
-    void heldVictimTransformKeepsHeadAboveFeetAfterHandRotation() {
+    void heldVictimTransformKeepsVictimUprightForGroundedChokeHold() {
         PoseStack poseStack = heldVictimRenderPose(0.0F);
         Vector3f headToFeetVector = poseStack.last().normal().transform(new Vector3f(0.0F, 1.0F, 0.0F));
         assertTrue(
-                headToFeetVector.y < 0.0F,
-                "Expected victim model head-to-feet direction to point downward in world space"
+                headToFeetVector.y > 0.0F,
+                "Expected held victim to stay upright instead of hanging upside down"
         );
     }
 
     @Test
-    void heldVictimTransformDropsFeetBelowTheHandForNeckHold() {
+    void heldVictimTransformKeepsNeckCloseToTheHand() {
         PoseStack poseStack = new PoseStack();
         poseStack.mulPose(new Quaternionf().rotationZYX(ARM_Z_ROT, ARM_Y_ROT, ARM_X_ROT));
 
         HimGrabVictimTransform.apply(poseStack, ARM_X_ROT, ARM_Y_ROT, ARM_Z_ROT, 0.0F, ZOMBIE_HEIGHT);
 
-        Vector3f feetPosition = poseStack.last().pose().transformPosition(new Vector3f(0.0F, 0.0F, 0.0F));
-        assertTrue(feetPosition.y < -1.0F, "Expected held victim feet to hang below the hand instead of standing on it");
+        Vector3f neckPosition = poseStack.last().pose().transformPosition(new Vector3f(0.0F, ZOMBIE_HEIGHT * 0.75F, 0.0F));
+        assertTrue(
+                Math.abs(neckPosition.y) < 0.35F,
+                "Expected held victim neck to stay near Him's choke hand instead of hanging away from it"
+        );
     }
 
     @Test

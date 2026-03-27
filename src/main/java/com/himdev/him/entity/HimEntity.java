@@ -753,7 +753,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         return this.position()
                 .add(forward.scale(0.25D))
                 .add(right.scale(0.55D))
-                .add(0.0D, 1.45D, 0.0D);
+                .add(0.0D, 0.05D, 0.0D);
     }
 
     private Vec3 horizontalFacingVector(float yawDegrees) {
