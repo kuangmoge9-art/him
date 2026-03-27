@@ -3,6 +3,7 @@ package com.himdev.him.client.render.layer;
 import com.himdev.him.client.model.HimModel;
 import com.himdev.him.entity.HimEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.Mth;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
@@ -48,6 +49,7 @@ public final class HimGrabVictimLayer extends RenderLayer<HimEntity, HimModel> {
                 getParentModel().rightArm.xRot,
                 getParentModel().rightArm.yRot,
                 getParentModel().rightArm.zRot,
+                Mth.rotLerp(partialTick, living.yBodyRotO, living.yBodyRot),
                 living.getBbHeight()
         );
         boolean invisible = living.isInvisible();
