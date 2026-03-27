@@ -520,7 +520,6 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.setNoGravity(true);
         this.setDeltaMovement(Vec3.ZERO);
         this.fallDistance = 0.0F;
-        faceRescueVictim(victim);
         victim.setInvisible(true);
         anchorRescueVictim(victim, rescueExecutionVictimAnchor());
 

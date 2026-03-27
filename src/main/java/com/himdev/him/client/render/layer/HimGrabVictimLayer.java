@@ -43,7 +43,13 @@ public final class HimGrabVictimLayer extends RenderLayer<HimEntity, HimModel> {
 
         poseStack.pushPose();
         getParentModel().translateToHand(HumanoidArm.RIGHT, poseStack);
-        HimGrabVictimTransform.apply(poseStack);
+        HimGrabVictimTransform.apply(
+                poseStack,
+                getParentModel().rightArm.xRot,
+                getParentModel().rightArm.yRot,
+                getParentModel().rightArm.zRot,
+                living.getBbHeight()
+        );
         boolean invisible = living.isInvisible();
         living.setInvisible(false);
         try {

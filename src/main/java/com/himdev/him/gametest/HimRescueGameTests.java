@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Ravager;
@@ -61,6 +62,7 @@ public final class HimRescueGameTests {
         HimEntity him = HimEntity.spawnForTest(level, himOrigin);
         Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(0, 0, 0));
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+        float[] holdYaw = new float[1];
 
         player.setHealth(1.0F);
         player.hurt(level.damageSources().mobAttack(zombie), 20.0F);
@@ -76,6 +78,12 @@ public final class HimRescueGameTests {
                     himOffset.x * zombieForward.x + himOffset.z * zombieForward.z > 0.2D,
                     "Expected Him to stage in front of the hostile instead of behind it"
             );
+            holdYaw[0] = him.getYRot();
+        });
+
+        helper.runAfterDelay(10, () -> {
+            float yawDelta = Math.abs(Mth.wrapDegrees(him.getYRot() - holdYaw[0]));
+            helper.assertTrue(yawDelta < 5.0F, "Expected Him to keep a stable rescue facing during the hold");
         });
 
         helper.runAfterDelay(30, () -> {
