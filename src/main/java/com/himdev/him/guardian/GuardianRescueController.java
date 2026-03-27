@@ -16,7 +16,6 @@ public final class GuardianRescueController {
     private static final int DIVINE_PROTECTION_TICKS = 100;
     private static final int RESISTANCE_AMPLIFIER = 4;
     private static final DivinePunisher DIVINE_PUNISHER = new DivinePunisher();
-    private static final HimRescueExecutionController RESCUE_EXECUTION = new HimRescueExecutionController(DIVINE_PUNISHER);
 
     private GuardianRescueController() {
     }
@@ -66,6 +65,6 @@ public final class GuardianRescueController {
             return;
         }
         HimLog.info("punishment routed target={} reason={}", resolution.targetEntityId(), resolution.reason());
-        RESCUE_EXECUTION.executeOrFallback(serverLevel, resolution.targetEntityId());
+        DIVINE_PUNISHER.punish(serverLevel, resolution.targetEntityId());
     }
 }

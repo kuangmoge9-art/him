@@ -7,13 +7,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Ravager;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -55,49 +53,23 @@ public final class HimRescueGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_rescue_execution_normal", timeoutTicks = 240)
-    public static void himGrabExecutesNormalHostileRescue(GameTestHelper helper) {
+    public static void himDirectlyPunishesNormalHostileRescue(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         BlockPos himOrigin = helper.absolutePos(new BlockPos(-4, 0, 0));
         HimEntity him = HimEntity.spawnForTest(level, himOrigin);
         Player player = TestPlayers.spawnSurvivalPlayer(helper, new BlockPos(0, 0, 0));
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
-        float[] holdYaw = new float[1];
 
-        zombie.setXRot(65.0F);
         player.setHealth(1.0F);
         player.hurt(level.damageSources().mobAttack(zombie), 20.0F);
 
         helper.runAfterDelay(6, () -> {
             helper.assertTrue(player.isAlive(), "Expected rescue to keep the player alive");
-            helper.assertTrue(zombie.isAlive(), "Expected victim to remain alive during the grab hold window");
-            helper.assertTrue(zombie.isInvisible(), "Expected held victim to be hidden while the grab render layer is active");
-            helper.assertTrue(him.distanceToSqr(zombie) < 4.0D, "Expected Him to teleport to the hostile during rescue");
-            helper.assertTrue(
-                    zombie.getY() - him.getY() < 0.6D,
-                    "Expected held victim to stay on the ground instead of floating above Him"
-            );
-            Vec3 zombieForward = zombie.getLookAngle();
-            Vec3 himOffset = him.position().subtract(zombie.position());
-            helper.assertTrue(
-                    himOffset.x * zombieForward.x + himOffset.z * zombieForward.z > 0.2D,
-                    "Expected Him to stage in front of the hostile instead of behind it"
-            );
-            helper.assertTrue(
-                    Math.abs(Mth.wrapDegrees(zombie.getXRot())) < 5.0F,
-                    "Expected held victim to be upright instead of keeping a downward head pitch"
-            );
-            holdYaw[0] = him.getYRot();
-        });
-
-        helper.runAfterDelay(10, () -> {
-            float yawDelta = Math.abs(Mth.wrapDegrees(him.getYRot() - holdYaw[0]));
-            helper.assertTrue(yawDelta < 5.0F, "Expected Him to keep a stable rescue facing during the hold");
-        });
-
-        helper.runAfterDelay(30, () -> {
-            helper.assertFalse(zombie.isAlive(), "Expected held hostile to die after the hold window");
-            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to return to the original rescue position");
+            helper.assertFalse(zombie.isAlive(), "Expected rescue punishment to directly kill normal-sized hostile targets");
+            helper.assertFalse(him.isInRescueExecution(), "Expected direct punishment path to keep rescue execution disabled");
+            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected direct punishment path to keep rescue visuals disabled");
+            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to stay at the original position during direct rescue punishment");
             HimTestState.removeHimForTest(helper, him);
             HimTestState.cleanupEntity(player);
             helper.succeed();
@@ -105,7 +77,7 @@ public final class HimRescueGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_rescue_execution_oversized")
-    public static void himBypassesGrabForOversizedHostileRescue(GameTestHelper helper) {
+    public static void himDirectlyPunishesOversizedHostileRescue(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         BlockPos himOrigin = helper.absolutePos(new BlockPos(-4, 0, 0));
@@ -117,7 +89,9 @@ public final class HimRescueGameTests {
         player.hurt(level.damageSources().mobAttack(ravager), 40.0F);
 
         helper.runAfterDelay(4, () -> {
-            helper.assertFalse(ravager.isAlive(), "Expected oversized hostile to keep the direct punishment path");
+            helper.assertFalse(ravager.isAlive(), "Expected oversized hostile rescue targets to be directly punished");
+            helper.assertFalse(him.isInRescueExecution(), "Expected direct punishment path to keep rescue execution disabled");
+            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected direct punishment path to keep rescue visuals disabled");
             helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to stay at the original position for oversized rescue targets");
             HimTestState.removeHimForTest(helper, him);
             HimTestState.cleanupEntity(player);
@@ -126,7 +100,7 @@ public final class HimRescueGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_rescue_execution_cleanup", timeoutTicks = 240)
-    public static void himClearsRescueStateWhenHeldVictimDisappears(GameTestHelper helper) {
+    public static void himNeverEntersRescueExecutionDuringNormalRescuePunishment(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         BlockPos himOrigin = helper.absolutePos(new BlockPos(-4, 0, 0));
@@ -137,10 +111,11 @@ public final class HimRescueGameTests {
         player.setHealth(1.0F);
         player.hurt(level.damageSources().mobAttack(zombie), 20.0F);
 
-        helper.runAfterDelay(6, () -> zombie.remove(Entity.RemovalReason.DISCARDED));
-        helper.runAfterDelay(24, () -> {
-            helper.assertFalse(him.isInRescueExecution(), "Expected Him to clear rescue execution state after victim loss");
-            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to return home after victim loss");
+        helper.runAfterDelay(12, () -> {
+            helper.assertFalse(zombie.isAlive(), "Expected normal rescue punishment target to die without a staged hold");
+            helper.assertFalse(him.isInRescueExecution(), "Expected normal rescue punishment to avoid rescue execution state");
+            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected normal rescue punishment to avoid rescue execution visuals");
+            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to stay at the original position during direct rescue punishment");
             HimTestState.removeHimForTest(helper, him);
             HimTestState.cleanupEntity(player);
             helper.succeed();
@@ -148,7 +123,7 @@ public final class HimRescueGameTests {
     }
 
     @GameTest(template = "empty", batch = "him_rescue_execution_reentry", timeoutTicks = 300)
-    public static void himRescueReentryFallsBackSafelyDuringActiveGrab(GameTestHelper helper) {
+    public static void himHandlesBackToBackRescuesWithDirectPunishment(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
         ServerLevel level = helper.getLevel();
         BlockPos himOrigin = helper.absolutePos(new BlockPos(-4, 0, 0));
@@ -165,9 +140,11 @@ public final class HimRescueGameTests {
 
         helper.runAfterDelay(40, () -> {
             helper.assertFalse(firstZombie.isAlive(), "Expected the first rescue victim to die");
-            helper.assertFalse(secondZombie.isAlive(), "Expected the second rescue path to stay lethal even during active grab");
+            helper.assertFalse(secondZombie.isAlive(), "Expected the second rescue path to stay lethal");
             helper.assertTrue(firstPlayer.isAlive() && secondPlayer.isAlive(), "Expected both rescues to succeed");
-            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to end at the original position after reentry fallback");
+            helper.assertFalse(him.isInRescueExecution(), "Expected back-to-back rescues to avoid rescue execution state");
+            helper.assertFalse(him.isRescueExecutionVisualActive(), "Expected back-to-back rescues to avoid rescue execution visuals");
+            helper.assertTrue(him.distanceToSqr(HimTestState.center(himOrigin)) < 1.0D, "Expected Him to remain at the original position after back-to-back direct punishments");
             HimTestState.removeHimForTest(helper, him);
             HimTestState.cleanupEntity(firstPlayer);
             HimTestState.cleanupEntity(secondPlayer);
