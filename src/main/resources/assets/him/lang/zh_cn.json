@@ -12,5 +12,12 @@
   "item.him.guardian_phone.tooltip.use": "\u53f3\u952e\u6253\u5f00\u624b\u673a\u754c\u9762\u3002",
   "item.him.guardian_phone.tooltip.gui": "\u5728\u754c\u9762\u4e2d\u5de6\u952e\u9009\u62e9\uff1a\u5e38\u9a7b\u3001\u9650\u65f6\u6216\u53d6\u6d88\u8ddf\u968f\u3002",
   "screen.him.guardian_phone.title": "\u624b\u673a",
-  "screen.him.guardian_phone.subtitle": "\u5de6\u952e\u9009\u62e9 Him \u7684\u5b88\u62a4\u6a21\u5f0f"
+  "screen.him.guardian_phone.subtitle": "\u5de6\u952e\u9009\u62e9 Him \u7684\u5b88\u62a4\u6a21\u5f0f",
+  "screen.him.guardian_phone.follow.desc": "\u8ddf\u5728\u4f60\u8eab\u8fb9\uff0c\u4e00\u76f4\u5b88\u7740\u4f60\u3002",
+  "screen.him.guardian_phone.follow.tag": "\u5e38\u9a7b",
+  "screen.him.guardian_phone.timed_follow.desc": "\u5728\u4f60\u8eab\u8fb9\u5b88\u62a4 2 \u5206\u949f\uff0c\u5230\u70b9\u79bb\u5f00\u3002",
+  "screen.him.guardian_phone.timed_follow.tag": "2:00",
+  "screen.him.guardian_phone.cancel_follow.desc": "\u8ba9 Him \u7acb\u5373\u505c\u6b62\u8ddf\u968f\u4f60\u3002",
+  "screen.him.guardian_phone.cancel_follow.tag": "\u505c\u6b62",
+  "screen.him.guardian_phone.footer": "ESC \u5173\u95ed    \u5de6\u952e\u9009\u62e9\u6a21\u5f0f"
 }

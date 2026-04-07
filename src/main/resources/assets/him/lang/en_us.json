@@ -12,5 +12,12 @@
   "item.him.guardian_phone.tooltip.use": "Right click to open the phone interface.",
   "item.him.guardian_phone.tooltip.gui": "Left click a mode in the interface to choose permanent, timed, or cancel follow.",
   "screen.him.guardian_phone.title": "Phone",
-  "screen.him.guardian_phone.subtitle": "Left click to choose how Him should guard you"
+  "screen.him.guardian_phone.subtitle": "Left click to choose how Him should guard you",
+  "screen.him.guardian_phone.follow.desc": "Stay at your side and keep guarding you.",
+  "screen.him.guardian_phone.follow.tag": "LIVE",
+  "screen.him.guardian_phone.timed_follow.desc": "Guard you for two minutes, then disappear.",
+  "screen.him.guardian_phone.timed_follow.tag": "2:00",
+  "screen.him.guardian_phone.cancel_follow.desc": "Tell Him to stop following you right away.",
+  "screen.him.guardian_phone.cancel_follow.tag": "OFF",
+  "screen.him.guardian_phone.footer": "ESC closes    Left click selects a mode"
 }
