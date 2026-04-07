@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class GuardianPhoneScreen extends Screen {
-    private static final int PHONE_WIDTH = 236;
-    private static final int SCREEN_INSET = 10;
-    private static final int CARD_HEIGHT = 50;
-    private static final int CARD_GAP = 10;
-    private static final int CARD_TOP_OFFSET = 88;
-    private static final int CARD_TO_FOOTER_GAP = 18;
-    private static final int FOOTER_TEXT_BOTTOM_MARGIN = 20;
+    private static final int PHONE_WIDTH = 206;
+    private static final int SCREEN_INSET = 9;
+    private static final int CARD_HEIGHT = 42;
+    private static final int CARD_GAP = 8;
+    private static final int CARD_TOP_OFFSET = 74;
+    private static final int CARD_TO_FOOTER_GAP = 14;
+    private static final int FOOTER_TEXT_BOTTOM_MARGIN = 16;
     private static final Component NETWORK_LABEL = Component.literal("114514G");
     private static final Component STATUS_PILL = Component.literal("HIM");
     private static final List<CardDefinition> CARD_DEFINITIONS = List.of(
@@ -114,36 +114,36 @@ public final class GuardianPhoneScreen extends Screen {
     }
 
     private void renderBackdrop(GuiGraphics graphics, long animationTick) {
-        fillVerticalGradientRect(graphics, 0, 0, this.width, this.height, 0xF60A1121, 0xFF040813);
-        int gridColor = withAlpha(0xFF87A5D6, 10);
+        fillVerticalGradientRect(graphics, 0, 0, this.width, this.height, 0x680A1121, 0x24040813);
+        int gridColor = withAlpha(0xFF87A5D6, 6);
         for (int y = 0; y < this.height; y += 18) {
             graphics.fill(0, y, this.width, y + 1, gridColor);
         }
         for (int x = 0; x < this.width; x += 22) {
-            graphics.fill(x, 0, x + 1, this.height, withAlpha(0xFF1D4ED8, 8));
+            graphics.fill(x, 0, x + 1, this.height, withAlpha(0xFF1D4ED8, 4));
         }
 
-        int pulseAlpha = 18 + Math.round(pulse(animationTick, 0.08F) * 16.0F);
+        int pulseAlpha = 10 + Math.round(pulse(animationTick, 0.08F) * 10.0F);
         drawAmbientGlow(graphics, phoneLeft - 24, phoneTop + 18, 54, PHONE_HEIGHT - 36, withAlpha(0xFF14B8A6, pulseAlpha));
         drawAmbientGlow(graphics, phoneLeft + PHONE_WIDTH - 30, phoneTop + 28, 60, PHONE_HEIGHT - 56, withAlpha(0xFF4F46E5, pulseAlpha + 6));
     }
 
     private void renderPhoneShell(GuiGraphics graphics, long animationTick) {
-        int shellGlow = 18 + Math.round(pulse(animationTick, 0.24F) * 10.0F);
-        drawSoftShadow(graphics, phoneLeft + 8, phoneTop + 10, PHONE_WIDTH, PHONE_HEIGHT, 0x50000000);
-        drawPanelSurface(graphics, phoneLeft, phoneTop, PHONE_WIDTH, PHONE_HEIGHT, 0xFF070B16, 0xFF111A2D, 0xFF273755, 0xFF425B86);
+        int shellGlow = 14 + Math.round(pulse(animationTick, 0.24F) * 8.0F);
+        drawSoftShadow(graphics, phoneLeft + 8, phoneTop + 10, PHONE_WIDTH, PHONE_HEIGHT, 0x32000000);
+        drawPanelSurface(graphics, phoneLeft, phoneTop, PHONE_WIDTH, PHONE_HEIGHT, 0xB0070B16, 0x9A111A2D, 0xC0273755, 0xC0425B86);
         drawPanelSurface(
                 graphics,
                 phoneLeft + 5,
                 phoneTop + 5,
                 PHONE_WIDTH - 10,
                 PHONE_HEIGHT - 10,
-                0xFF0A1120,
-                0xFF11192B,
-                0xFF162238,
-                withAlpha(0xFF8AA6DB, 92 + shellGlow)
+                0x900A1120,
+                0x7811192B,
+                0xA0162238,
+                withAlpha(0xFF8AA6DB, 68 + shellGlow)
         );
-        drawPanelSurface(graphics, screenLeft, screenTop, screenWidth, screenHeight, 0xFF0D1628, 0xFF131E34, 0xFF213251, 0xFF4B6EA5);
+        drawPanelSurface(graphics, screenLeft, screenTop, screenWidth, screenHeight, 0x960D1628, 0x78131E34, 0xA0213251, 0xB44B6EA5);
 
         int speakerLeft = phoneLeft + (PHONE_WIDTH / 2) - 28;
         int speakerTop = phoneTop + 7;
@@ -155,9 +155,9 @@ public final class GuardianPhoneScreen extends Screen {
 
     private void renderAppChrome(GuiGraphics graphics, long animationTick) {
         int headerLeft = screenLeft + 14;
-        int headerTop = screenTop + 24;
+        int headerTop = screenTop + 20;
         int headerWidth = screenWidth - 28;
-        int headerHeight = 40;
+        int headerHeight = 34;
         int statusY = screenTop + 9;
         int statusColor = 0xFFD8E3F8;
         int statusMuted = 0xFFA3B6D4;
@@ -173,27 +173,27 @@ public final class GuardianPhoneScreen extends Screen {
         graphics.drawString(this.font, NETWORK_LABEL, labelLeft, statusY, statusColor, false);
         drawSignalBars(graphics, labelLeft - 14, statusY + 7, statusMuted);
 
-        drawPanelSurface(graphics, headerLeft, headerTop, headerWidth, headerHeight, 0xFF121D33, 0xFF182742, 0xFF294062, 0xFF5B82C1);
-        graphics.fill(headerLeft + 10, headerTop + 8, headerLeft + 14, headerTop + headerHeight - 8, 0xFF14B8A6);
-        graphics.fill(headerLeft + 20, headerTop + 10, headerLeft + headerWidth - 20, headerTop + 11, withAlpha(0xFF8FB5FF, 46));
+        drawPanelSurface(graphics, headerLeft, headerTop, headerWidth, headerHeight, 0xA0121D33, 0x88182742, 0xB4294062, 0xC05B82C1);
+        graphics.fill(headerLeft + 10, headerTop + 7, headerLeft + 13, headerTop + headerHeight - 7, 0xFF14B8A6);
+        graphics.fill(headerLeft + 18, headerTop + 9, headerLeft + headerWidth - 18, headerTop + 10, withAlpha(0xFF8FB5FF, 34));
 
         int titleColor = 0xFFF5F8FF;
         int subtitleColor = 0xFFA9BDD9;
-        graphics.drawString(this.font, this.title, headerLeft + 22, headerTop + 8, titleColor, false);
+        graphics.drawString(this.font, this.title, headerLeft + 20, headerTop + 7, titleColor, false);
         graphics.drawString(
                 this.font,
                 Component.translatable("screen.him.guardian_phone.subtitle"),
-                headerLeft + 22,
-                headerTop + 22,
+                headerLeft + 20,
+                headerTop + 18,
                 subtitleColor,
                 false
         );
 
         int pillWidth = this.font.width(STATUS_PILL) + 14;
         int pillLeft = headerLeft + headerWidth - pillWidth - 12;
-        int pillPulse = 26 + Math.round(pulse(animationTick, 0.36F) * 22.0F);
-        drawCapsule(graphics, pillLeft, headerTop + 11, pillWidth, 14, 0xFF16263E, 0xFF2F4B74, withAlpha(0xFF14B8A6, 120 + pillPulse));
-        graphics.drawCenteredString(this.font, STATUS_PILL, pillLeft + (pillWidth / 2), headerTop + 14, 0xFFE9FFF9);
+        int pillPulse = 18 + Math.round(pulse(animationTick, 0.36F) * 16.0F);
+        drawCapsule(graphics, pillLeft, headerTop + 10, pillWidth, 12, 0xB016263E, 0xC02F4B74, withAlpha(0xFF14B8A6, 96 + pillPulse));
+        graphics.drawCenteredString(this.font, STATUS_PILL, pillLeft + (pillWidth / 2), headerTop + 12, 0xFFE9FFF9);
 
         drawAnimatedDivider(graphics, screenLeft + 14, headerTop + headerHeight + 8, screenWidth - 28, animationTick);
     }
@@ -203,21 +203,21 @@ public final class GuardianPhoneScreen extends Screen {
             boolean hovered = card.contains(mouseX, mouseY);
             float pulse = pulse(animationTick, card.selection().ordinal() * 0.19F);
             int accentColor = blend(card.baseColor(), 0xFFFFFFFF, 0.10F + (hovered ? 0.10F : 0.04F) + (pulse * 0.08F));
-            int bodyTop = blend(0xFF10192B, accentColor, hovered ? 0.24F : 0.16F);
-            int bodyBottom = blend(0xFF0C1423, accentColor, hovered ? 0.18F : 0.11F);
-            int edgeColor = blend(0xFF233251, accentColor, hovered ? 0.78F : 0.58F);
-            int highlightColor = blend(0xFF45658E, accentColor, hovered ? 0.82F : 0.56F);
+            int bodyTop = withAlpha(blend(0xFF10192B, accentColor, hovered ? 0.24F : 0.16F), hovered ? 214 : 188);
+            int bodyBottom = withAlpha(blend(0xFF0C1423, accentColor, hovered ? 0.18F : 0.11F), hovered ? 198 : 170);
+            int edgeColor = withAlpha(blend(0xFF233251, accentColor, hovered ? 0.78F : 0.58F), hovered ? 232 : 206);
+            int highlightColor = withAlpha(blend(0xFF45658E, accentColor, hovered ? 0.82F : 0.56F), hovered ? 212 : 184);
             int titleTextColor = 0xFFF5F8FF;
             int descTextColor = 0xFF99ABC8;
-            int shadowColor = hovered ? 0x54000000 : 0x38000000;
-            int tagFill = blend(0xFF162238, accentColor, hovered ? 0.84F : 0.72F);
-            int tagEdge = blend(0xFF365383, accentColor, hovered ? 0.92F : 0.78F);
+            int shadowColor = hovered ? 0x30000000 : 0x20000000;
+            int tagFill = withAlpha(blend(0xFF162238, accentColor, hovered ? 0.84F : 0.72F), hovered ? 228 : 206);
+            int tagEdge = withAlpha(blend(0xFF365383, accentColor, hovered ? 0.92F : 0.78F), hovered ? 244 : 220);
             int tagTextColor = 0xFFF9FCFF;
 
             drawSoftShadow(graphics, card.x() + 2, card.y() + 4, card.width(), card.height(), shadowColor);
             drawPanelSurface(graphics, card.x(), card.y(), card.width(), card.height(), bodyTop, bodyBottom, edgeColor, highlightColor);
             graphics.fill(card.x() + 8, card.y() + 7, card.x() + 12, card.y() + card.height() - 7, accentColor);
-            graphics.fill(card.x() + 18, card.y() + 9, card.x() + card.width() - 18, card.y() + 10, withAlpha(accentColor, 38));
+            graphics.fill(card.x() + 18, card.y() + 9, card.x() + card.width() - 18, card.y() + 10, withAlpha(accentColor, 28));
 
             int tagWidth = this.font.width(card.tag()) + 14;
             int tagLeft = card.x() + card.width() - tagWidth - 12;
@@ -226,15 +226,15 @@ public final class GuardianPhoneScreen extends Screen {
                     tagLeft,
                     card.y() + 10,
                     tagWidth,
-                    14,
+                    12,
                     tagFill,
                     tagEdge,
-                    withAlpha(0xFFFFFFFF, hovered ? 140 : 96)
+                    withAlpha(0xFFFFFFFF, hovered ? 124 : 88)
             );
 
-            graphics.drawString(this.font, Component.translatable(card.selection().translationKey()), card.x() + 20, card.y() + 12, titleTextColor, false);
-            graphics.drawString(this.font, card.description(), card.x() + 20, card.y() + 28, descTextColor, false);
-            graphics.drawCenteredString(this.font, card.tag(), tagLeft + (tagWidth / 2), card.y() + 14, tagTextColor);
+            graphics.drawString(this.font, Component.translatable(card.selection().translationKey()), card.x() + 20, card.y() + 10, titleTextColor, false);
+            graphics.drawString(this.font, card.description(), card.x() + 20, card.y() + 24, descTextColor, false);
+            graphics.drawCenteredString(this.font, card.tag(), tagLeft + (tagWidth / 2), card.y() + 12, tagTextColor);
         }
     }
 
@@ -250,8 +250,8 @@ public final class GuardianPhoneScreen extends Screen {
 
         int homeLeft = phoneLeft + (PHONE_WIDTH / 2) - 24;
         int homeTop = phoneTop + PHONE_HEIGHT - 12;
-        int glowAlpha = 36 + Math.round(pulse(animationTick, 0.48F) * 28.0F);
-        drawCapsule(graphics, homeLeft, homeTop, 48, 5, withAlpha(0xFF15233B, 180), withAlpha(0xFF415C88, 160), withAlpha(0xFF9CC5FF, glowAlpha));
+        int glowAlpha = 24 + Math.round(pulse(animationTick, 0.48F) * 20.0F);
+        drawCapsule(graphics, homeLeft, homeTop, 48, 5, withAlpha(0xFF15233B, 136), withAlpha(0xFF415C88, 122), withAlpha(0xFF9CC5FF, glowAlpha));
     }
 
     private void drawAmbientGlow(GuiGraphics graphics, int x, int y, int width, int height, int color) {
