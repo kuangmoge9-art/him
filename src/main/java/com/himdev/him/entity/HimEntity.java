@@ -41,7 +41,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 
 public class HimEntity extends PathfinderMob implements RangedAttackMob {
@@ -123,8 +124,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private UUID guardedPlayerId;
     private HimGuardianMode guardianMode = HimGuardianMode.NONE;
     private int guardianTicksRemaining;
-    @Nullable
-    private ChunkPos forcedChunkPos;
+    private Set<ChunkPos> forcedChunks = Collections.emptySet();
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -238,8 +238,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             return;
         }
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel) {
-            HimChunkLoading.releaseEntityTicket(serverLevel, getUUID(), forcedChunkPos);
-            forcedChunkPos = null;
+            HimChunkLoading.releaseEntityTickets(serverLevel, getUUID(), forcedChunks);
+            forcedChunks = Collections.emptySet();
         }
         super.onRemovedFromWorld();
     }
@@ -412,7 +412,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         withAuthorizedDeltaMovementUpdates(() -> super.tick());
         sanitizeExternalVisualResidue();
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel && !this.isRemoved()) {
-            forcedChunkPos = HimChunkLoading.syncEntityTicket(serverLevel, this, forcedChunkPos);
+            forcedChunks = HimChunkLoading.syncEntityTickets(serverLevel, this, forcedChunks);
         }
     }
 

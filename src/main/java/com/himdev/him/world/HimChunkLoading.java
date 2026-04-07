@@ -7,10 +7,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraftforge.common.world.ForgeChunkManager;
 
-import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public final class HimChunkLoading {
+    private static final int CHUNK_RADIUS = 1;
     private static final boolean TICKING_CHUNK = true;
 
     private HimChunkLoading() {
@@ -20,23 +23,36 @@ public final class HimChunkLoading {
         ForgeChunkManager.setForcedChunkLoadingCallback(HimMod.MOD_ID, HimChunkLoading::validateTickets);
     }
 
-    public static ChunkPos syncEntityTicket(ServerLevel level, HimEntity him, @Nullable ChunkPos previousChunk) {
-        ChunkPos currentChunk = him.chunkPosition();
-        if (currentChunk.equals(previousChunk)) {
-            return previousChunk;
+    public static Set<ChunkPos> syncEntityTickets(ServerLevel level, HimEntity him, Set<ChunkPos> previousChunks) {
+        Set<ChunkPos> currentChunks = trackedChunks(him.chunkPosition());
+        if (currentChunks.equals(previousChunks)) {
+            return previousChunks;
         }
 
-        boolean added = ForgeChunkManager.forceChunk(
-                level,
-                HimMod.MOD_ID,
-                him,
-                currentChunk.x,
-                currentChunk.z,
-                true,
-                TICKING_CHUNK
-        );
+        int addedCount = 0;
+        int removedCount = 0;
+        for (ChunkPos currentChunk : currentChunks) {
+            if (previousChunks.contains(currentChunk)) {
+                continue;
+            }
+            boolean added = ForgeChunkManager.forceChunk(
+                    level,
+                    HimMod.MOD_ID,
+                    him,
+                    currentChunk.x,
+                    currentChunk.z,
+                    true,
+                    TICKING_CHUNK
+            );
+            if (added) {
+                addedCount++;
+            }
+        }
 
-        if (previousChunk != null && !previousChunk.equals(currentChunk)) {
+        for (ChunkPos previousChunk : previousChunks) {
+            if (currentChunks.contains(previousChunk)) {
+                continue;
+            }
             boolean removed = ForgeChunkManager.forceChunk(
                     level,
                     HimMod.MOD_ID,
@@ -46,38 +62,48 @@ public final class HimChunkLoading {
                     false,
                     TICKING_CHUNK
             );
-            HimLog.info(
-                    "him chunk_ticket_moved uuid={} from={} to={} add={} remove={}",
-                    him.getUUID(),
-                    previousChunk,
-                    currentChunk,
-                    added,
-                    removed
-            );
-        } else if (added) {
-            HimLog.info("him chunk_ticket_acquired uuid={} chunk={}", him.getUUID(), currentChunk);
+            if (removed) {
+                removedCount++;
+            }
         }
 
-        return currentChunk;
+        if (previousChunks.isEmpty()) {
+            HimLog.info("him chunk_tickets_acquired uuid={} center={} count={}", him.getUUID(), him.chunkPosition(), addedCount);
+        } else {
+            HimLog.info(
+                    "him chunk_tickets_synced uuid={} center={} total={} added={} removed={}",
+                    him.getUUID(),
+                    him.chunkPosition(),
+                    currentChunks.size(),
+                    addedCount,
+                    removedCount
+            );
+        }
+
+        return currentChunks;
     }
 
-    public static void releaseEntityTicket(ServerLevel level, UUID himId, @Nullable ChunkPos chunkPos) {
-        if (chunkPos == null) {
+    public static void releaseEntityTickets(ServerLevel level, UUID himId, Set<ChunkPos> chunkPositions) {
+        if (chunkPositions.isEmpty()) {
             return;
         }
 
-        boolean removed = ForgeChunkManager.forceChunk(
-                level,
-                HimMod.MOD_ID,
-                himId,
-                chunkPos.x,
-                chunkPos.z,
-                false,
-                TICKING_CHUNK
-        );
-        if (removed) {
-            HimLog.info("him chunk_ticket_released uuid={} chunk={}", himId, chunkPos);
+        int releasedCount = 0;
+        for (ChunkPos chunkPos : chunkPositions) {
+            boolean removed = ForgeChunkManager.forceChunk(
+                    level,
+                    HimMod.MOD_ID,
+                    himId,
+                    chunkPos.x,
+                    chunkPos.z,
+                    false,
+                    TICKING_CHUNK
+            );
+            if (removed) {
+                releasedCount++;
+            }
         }
+        HimLog.info("him chunk_tickets_released uuid={} count={}", himId, releasedCount);
     }
 
     private static void validateTickets(ServerLevel level, ForgeChunkManager.TicketHelper ticketHelper) {
@@ -89,5 +115,15 @@ public final class HimChunkLoading {
             ticketHelper.removeAllTickets(owner);
             HimLog.info("him chunk_ticket_stale_cleared uuid={} dimension={}", owner, level.dimension().location());
         }
+    }
+
+    private static Set<ChunkPos> trackedChunks(ChunkPos centerChunk) {
+        Set<ChunkPos> chunks = new HashSet<>();
+        for (int dx = -CHUNK_RADIUS; dx <= CHUNK_RADIUS; dx++) {
+            for (int dz = -CHUNK_RADIUS; dz <= CHUNK_RADIUS; dz++) {
+                chunks.add(new ChunkPos(centerChunk.x + dx, centerChunk.z + dz));
+            }
+        }
+        return Collections.unmodifiableSet(chunks);
     }
 }

@@ -118,8 +118,8 @@ public final class HimSpawnGameTests {
 
         helper.runAfterDelay(2, () -> {
             int ticketCount = tickingEntityChunkCount(level);
-            if (ticketCount != 1) {
-                throw new GameTestAssertException("Expected Him to force exactly one ticking chunk after spawn, got " + ticketCount);
+            if (ticketCount != 9) {
+                throw new GameTestAssertException("Expected Him to force exactly nine ticking chunks after spawn, got " + ticketCount);
             }
 
             BlockPos farChunkPos = helper.absolutePos(new BlockPos(32, 0, 0));
@@ -128,8 +128,8 @@ public final class HimSpawnGameTests {
 
         helper.runAfterDelay(6, () -> {
             int ticketCount = tickingEntityChunkCount(level);
-            if (ticketCount != 1) {
-                throw new GameTestAssertException("Expected Him chunk forcing to move without leaking old tickets, got " + ticketCount);
+            if (ticketCount != 9) {
+                throw new GameTestAssertException("Expected Him chunk forcing to move as a 3x3 area without leaking old tickets, got " + ticketCount);
             }
             if (!ForgeChunkManager.hasForcedChunks(level)) {
                 throw new GameTestAssertException("Expected Him to keep forced chunks active while present");
