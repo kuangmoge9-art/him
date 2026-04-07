@@ -3,6 +3,7 @@ package com.himdev.him.gametest;
 import com.himdev.him.HimMod;
 import com.himdev.him.entity.HimEntity;
 import com.himdev.him.entity.HimGuardianMode;
+import com.himdev.him.item.GuardianPhoneAutoEquipController;
 import com.himdev.him.item.GuardianPhoneItem;
 import com.himdev.him.registry.HimItems;
 import com.himdev.him.world.HimLocator;
@@ -16,6 +17,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -23,6 +25,30 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class HimGuardianPhoneGameTests {
     private HimGuardianPhoneGameTests() {
+    }
+
+    @GameTest(template = "empty", batch = "him_guardian_phone_autoequip")
+    public static void guardianPhoneAutoAppearsInMainHand(GameTestHelper helper) {
+        Player player = TestPlayers.spawnSurvivalPlayer(helper, BlockPos.ZERO);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.STONE));
+
+        GuardianPhoneAutoEquipController.ensurePhoneInMainHand(player);
+
+        helper.runAfterDelay(1, () -> {
+            ItemStack mainHand = player.getMainHandItem();
+            if (!mainHand.is(HimItems.GUARDIAN_PHONE.get())) {
+                throw new GameTestAssertException("Expected phone to auto-equip into the player's main hand, found=" + mainHand);
+            }
+            if (countStacks(player, HimItems.GUARDIAN_PHONE.get()) != 1) {
+                throw new GameTestAssertException("Expected exactly one phone after auto-equip");
+            }
+            if (countStacks(player, Items.STONE) != 1) {
+                throw new GameTestAssertException("Expected displaced main-hand item to remain in the player's inventory");
+            }
+
+            HimTestState.cleanupEntity(player);
+            helper.succeed();
+        });
     }
 
     @GameTest(template = "empty", batch = "him_guardian_phone_follow", timeoutTicks = 160)
@@ -120,5 +146,15 @@ public final class HimGuardianPhoneGameTests {
             HimTestState.cleanupEntity(player);
             helper.succeed();
         });
+    }
+
+    private static int countStacks(Player player, net.minecraft.world.item.Item item) {
+        int count = 0;
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            if (player.getInventory().getItem(slot).is(item)) {
+                count++;
+            }
+        }
+        return count;
     }
 }
