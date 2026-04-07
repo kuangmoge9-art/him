@@ -4,7 +4,8 @@ import com.himdev.him.HimMod;
 import com.himdev.him.entity.HimEntity;
 import com.himdev.him.entity.HimGuardianMode;
 import com.himdev.him.item.GuardianPhoneAutoEquipController;
-import com.himdev.him.item.GuardianPhoneItem;
+import com.himdev.him.item.GuardianPhoneSelection;
+import com.himdev.him.item.GuardianPhoneService;
 import com.himdev.him.registry.HimItems;
 import com.himdev.him.world.HimLocator;
 import net.minecraft.core.BlockPos;
@@ -59,7 +60,7 @@ public final class HimGuardianPhoneGameTests {
         ItemStack phone = new ItemStack(HimItems.GUARDIAN_PHONE.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, phone);
 
-        phone.getItem().use(level, player, InteractionHand.MAIN_HAND);
+        GuardianPhoneService.handleSelection(player, GuardianPhoneSelection.FOLLOW);
 
         helper.runAfterDelay(2, () -> {
             HimEntity him = HimLocator.activeHim(level);
@@ -88,6 +89,40 @@ public final class HimGuardianPhoneGameTests {
         });
     }
 
+    @GameTest(template = "empty", batch = "him_guardian_phone_cancel_follow", timeoutTicks = 160)
+    public static void guardianPhoneCancelsFollowWhenSneakUsedDuringGuard(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        Player player = TestPlayers.spawnSurvivalPlayer(helper, BlockPos.ZERO);
+        ItemStack phone = new ItemStack(HimItems.GUARDIAN_PHONE.get());
+        player.setItemInHand(InteractionHand.MAIN_HAND, phone);
+
+        GuardianPhoneService.handleSelection(player, GuardianPhoneSelection.FOLLOW);
+
+        helper.runAfterDelay(2, () -> {
+            HimEntity him = HimLocator.activeHim(level);
+            if (him == null || !him.isGuardingPlayer(player)) {
+                throw new GameTestAssertException("Expected Him to start following before cancellation test");
+            }
+
+            GuardianPhoneService.handleSelection(player, GuardianPhoneSelection.CANCEL_FOLLOW);
+        });
+
+        helper.runAfterDelay(6, () -> {
+            HimEntity him = HimLocator.activeHim(level);
+            if (him == null || him.isRemoved()) {
+                throw new GameTestAssertException("Expected Him to remain in the world after follow cancellation");
+            }
+            if (him.isGuardingPlayer(player) || him.hasGuardianAssignment()) {
+                throw new GameTestAssertException("Expected sneak phone use to cancel follow instead of keeping guardian assignment");
+            }
+
+            HimTestState.removeHimForTest(helper, him);
+            HimTestState.cleanupEntity(player);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", batch = "him_guardian_phone_protect", timeoutTicks = 160)
     public static void guardianPhoneMakesHimPunishPlayerAttacker(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);
@@ -97,7 +132,7 @@ public final class HimGuardianPhoneGameTests {
         ItemStack phone = new ItemStack(HimItems.GUARDIAN_PHONE.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, phone);
 
-        phone.getItem().use(level, player, InteractionHand.MAIN_HAND);
+        GuardianPhoneService.handleSelection(player, GuardianPhoneSelection.FOLLOW);
         helper.runAfterDelay(2, () -> player.hurt(level.damageSources().mobAttack(zombie), 1.0F));
 
         helper.runAfterDelay(24, () -> {
@@ -124,10 +159,9 @@ public final class HimGuardianPhoneGameTests {
         ServerLevel level = helper.getLevel();
         Player player = TestPlayers.spawnSurvivalPlayer(helper, BlockPos.ZERO);
         ItemStack phone = new ItemStack(HimItems.GUARDIAN_PHONE.get());
-        GuardianPhoneItem.setMode(phone, HimGuardianMode.TIMED_FOLLOW);
         player.setItemInHand(InteractionHand.MAIN_HAND, phone);
 
-        phone.getItem().use(level, player, InteractionHand.MAIN_HAND);
+        GuardianPhoneService.handleSelection(player, GuardianPhoneSelection.TIMED_FOLLOW);
 
         helper.runAfterDelay(2, () -> {
             HimEntity him = HimLocator.activeHim(level);

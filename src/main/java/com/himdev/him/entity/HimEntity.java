@@ -552,6 +552,24 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         return guardianMode != HimGuardianMode.NONE && guardedPlayerId != null;
     }
 
+    public void deactivateGuardian(Player player) {
+        if (player != null && !isGuardingPlayer(player)) {
+            return;
+        }
+
+        HimLog.info(
+                "him guardian_mode_cleared uuid={} owner={} mode={}",
+                getUUID(),
+                player != null ? player.getScoreboardName() : guardedPlayerId,
+                guardianMode.serializedName()
+        );
+        angerTarget = null;
+        this.setTarget(null);
+        this.getNavigation().stop();
+        guardianTicksRemaining = 0;
+        clearGuardianState();
+    }
+
     public void relocateBeside(Player player) {
         if (!(this.level() instanceof ServerLevel serverLevel) || player == null || player.level() != this.level()) {
             return;

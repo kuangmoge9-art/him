@@ -2,12 +2,15 @@
   "entity.him.him": "Him",
   "effect.him.divine_protection": "\u795e\u4f51",
   "item.him.guardian_phone": "\u624b\u673a",
-  "item.him.guardian_phone.mode.follow": "\u5e38\u9a7b\u5b88\u62a4",
-  "item.him.guardian_phone.mode.timed_follow": "\u9650\u65f6\u5b88\u62a4\uff082\u5206\u949f\uff09",
-  "item.him.guardian_phone.mode_switched": "\u624b\u673a\u6a21\u5f0f\uff1a%s",
+  "item.him.guardian_phone.action.follow": "\u5e38\u9a7b\u5b88\u62a4",
+  "item.him.guardian_phone.action.timed_follow": "\u9650\u65f6\u5b88\u62a4\uff082\u5206\u949f\uff09",
+  "item.him.guardian_phone.action.cancel_follow": "\u53d6\u6d88\u8ddf\u968f",
+  "item.him.guardian_phone.follow_cancelled": "\u5df2\u53d6\u6d88 Him \u8ddf\u968f\u5b88\u62a4\u3002",
+  "item.him.guardian_phone.no_follow_to_cancel": "\u5f53\u524d\u6ca1\u6709 Him \u5728\u8ddf\u968f\u4f60\u3002",
   "item.him.guardian_phone.activated": "Him \u5df2\u54cd\u5e94\u53ec\u5524\uff1a%s",
   "item.him.guardian_phone.failed": "Him \u6ca1\u6709\u54cd\u5e94\u53ec\u5524\u3002",
-  "item.him.guardian_phone.tooltip.use": "\u53f3\u952e\u53ec\u5524 Him \u5230\u4f60\u8eab\u8fb9\u5b88\u62a4\u4f60\u3002",
-  "item.him.guardian_phone.tooltip.switch": "\u6f5c\u884c+\u53f3\u952e\u5207\u6362\u6a21\u5f0f\u3002",
-  "item.him.guardian_phone.tooltip.mode": "\u5f53\u524d\u6a21\u5f0f\uff1a%s"
+  "item.him.guardian_phone.tooltip.use": "\u53f3\u952e\u6253\u5f00\u624b\u673a\u754c\u9762\u3002",
+  "item.him.guardian_phone.tooltip.gui": "\u5728\u754c\u9762\u4e2d\u5de6\u952e\u9009\u62e9\uff1a\u5e38\u9a7b\u3001\u9650\u65f6\u6216\u53d6\u6d88\u8ddf\u968f\u3002",
+  "screen.him.guardian_phone.title": "\u624b\u673a",
+  "screen.him.guardian_phone.subtitle": "\u5de6\u952e\u9009\u62e9 Him \u7684\u5b88\u62a4\u6a21\u5f0f"
 }

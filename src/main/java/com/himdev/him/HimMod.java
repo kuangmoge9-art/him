@@ -1,5 +1,6 @@
 package com.himdev.him;
 
+import com.himdev.him.network.HimNetwork;
 import com.himdev.him.registry.HimEntityTypes;
 import com.himdev.him.registry.HimEffects;
 import com.himdev.him.registry.HimItems;
@@ -13,6 +14,7 @@ public final class HimMod {
 
     public HimMod() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        HimNetwork.register();
         HimEntityTypes.register(modEventBus);
         HimEffects.register(modEventBus);
         HimItems.register(modEventBus);
