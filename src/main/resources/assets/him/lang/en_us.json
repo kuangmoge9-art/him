@@ -1,7 +1,7 @@
 {
   "entity.him.him": "Him",
   "effect.him.divine_protection": "Divine Protection",
-  "item.him.guardian_phone": "Guardian Phone",
+  "item.him.guardian_phone": "手机",
   "item.him.guardian_phone.mode.follow": "Permanent Guard",
   "item.him.guardian_phone.mode.timed_follow": "Timed Guard (2 min)",
   "item.him.guardian_phone.mode_switched": "Guardian phone mode: %s",
