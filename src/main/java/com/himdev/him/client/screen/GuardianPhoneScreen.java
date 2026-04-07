@@ -12,10 +12,33 @@ import java.util.List;
 
 public final class GuardianPhoneScreen extends Screen {
     private static final int PHONE_WIDTH = 214;
-    private static final int PHONE_HEIGHT = 252;
     private static final int SCREEN_INSET = 12;
     private static final int CARD_HEIGHT = 46;
     private static final int CARD_GAP = 10;
+    private static final int CARD_TOP_OFFSET = 72;
+    private static final int CARD_TO_FOOTER_GAP = 16;
+    private static final int FOOTER_TEXT_BOTTOM_MARGIN = 22;
+    private static final List<CardDefinition> CARD_DEFINITIONS = List.of(
+            new CardDefinition(
+                    GuardianPhoneSelection.FOLLOW,
+                    0xFF0F766E,
+                    Component.translatable("screen.him.guardian_phone.follow.desc"),
+                    Component.translatable("screen.him.guardian_phone.follow.tag")
+            ),
+            new CardDefinition(
+                    GuardianPhoneSelection.TIMED_FOLLOW,
+                    0xFF1D4ED8,
+                    Component.translatable("screen.him.guardian_phone.timed_follow.desc"),
+                    Component.translatable("screen.him.guardian_phone.timed_follow.tag")
+            ),
+            new CardDefinition(
+                    GuardianPhoneSelection.CANCEL_FOLLOW,
+                    0xFFB91C1C,
+                    Component.translatable("screen.him.guardian_phone.cancel_follow.desc"),
+                    Component.translatable("screen.him.guardian_phone.cancel_follow.tag")
+            )
+    );
+    private static final int PHONE_HEIGHT = requiredPhoneHeight(CARD_DEFINITIONS.size());
 
     private final List<ActionCard> cards = new ArrayList<>();
     private int phoneLeft;
@@ -41,38 +64,21 @@ public final class GuardianPhoneScreen extends Screen {
 
         cards.clear();
         int cardLeft = screenLeft + 16;
-        int cardTop = screenTop + 66;
+        int cardTop = screenTop + CARD_TOP_OFFSET;
         int cardWidth = screenWidth - 32;
-        cards.add(new ActionCard(
-                GuardianPhoneSelection.FOLLOW,
-                cardLeft,
-                cardTop,
-                cardWidth,
-                CARD_HEIGHT,
-                0xFF0F766E,
-                Component.translatable("screen.him.guardian_phone.follow.desc"),
-                Component.translatable("screen.him.guardian_phone.follow.tag")
-        ));
-        cards.add(new ActionCard(
-                GuardianPhoneSelection.TIMED_FOLLOW,
-                cardLeft,
-                cardTop + CARD_HEIGHT + CARD_GAP,
-                cardWidth,
-                CARD_HEIGHT,
-                0xFF1D4ED8,
-                Component.translatable("screen.him.guardian_phone.timed_follow.desc"),
-                Component.translatable("screen.him.guardian_phone.timed_follow.tag")
-        ));
-        cards.add(new ActionCard(
-                GuardianPhoneSelection.CANCEL_FOLLOW,
-                cardLeft,
-                cardTop + ((CARD_HEIGHT + CARD_GAP) * 2),
-                cardWidth,
-                CARD_HEIGHT,
-                0xFFB91C1C,
-                Component.translatable("screen.him.guardian_phone.cancel_follow.desc"),
-                Component.translatable("screen.him.guardian_phone.cancel_follow.tag")
-        ));
+        for (int index = 0; index < CARD_DEFINITIONS.size(); index++) {
+            CardDefinition definition = CARD_DEFINITIONS.get(index);
+            cards.add(new ActionCard(
+                    definition.selection(),
+                    cardLeft,
+                    cardTop + (index * (CARD_HEIGHT + CARD_GAP)),
+                    cardWidth,
+                    CARD_HEIGHT,
+                    definition.baseColor(),
+                    definition.description(),
+                    definition.tag()
+            ));
+        }
     }
 
     @Override
@@ -168,7 +174,7 @@ public final class GuardianPhoneScreen extends Screen {
                 this.font,
                 Component.translatable("screen.him.guardian_phone.footer"),
                 this.width / 2,
-                screenTop + screenHeight - 26,
+                footerTextY(),
                 0xFF94A3B8
         );
         drawRoundedPanel(graphics, phoneLeft + (PHONE_WIDTH / 2) - 20, phoneTop + PHONE_HEIGHT - 10, 40, 4, 0x66E2E8F0, 0x44CBD5E1, 0x88FFFFFF);
@@ -197,6 +203,30 @@ public final class GuardianPhoneScreen extends Screen {
         int g = Math.min(255, ((color >>> 8) & 0xFF) + ((delta >>> 8) & 0xFF));
         int b = Math.min(255, (color & 0xFF) + (delta & 0xFF));
         return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    private int footerTextY() {
+        return screenTop + screenHeight - FOOTER_TEXT_BOTTOM_MARGIN;
+    }
+
+    private static int requiredPhoneHeight(int cardCount) {
+        return (SCREEN_INSET * 2)
+                + CARD_TOP_OFFSET
+                + totalCardStackHeight(cardCount)
+                + CARD_TO_FOOTER_GAP
+                + FOOTER_TEXT_BOTTOM_MARGIN;
+    }
+
+    private static int totalCardStackHeight(int cardCount) {
+        return (cardCount * CARD_HEIGHT) + (Math.max(0, cardCount - 1) * CARD_GAP);
+    }
+
+    private record CardDefinition(
+            GuardianPhoneSelection selection,
+            int baseColor,
+            Component description,
+            Component tag
+    ) {
     }
 
     private record ActionCard(
