@@ -89,6 +89,39 @@ public final class HimGuardianPhoneGameTests {
         });
     }
 
+    @GameTest(template = "empty", batch = "him_guardian_phone_recall_existing", timeoutTicks = 160)
+    public static void guardianPhoneRecallsExistingHimToPlayer(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        Player player = TestPlayers.spawnSurvivalPlayer(helper, BlockPos.ZERO);
+        ItemStack phone = new ItemStack(HimItems.GUARDIAN_PHONE.get());
+        player.setItemInHand(InteractionHand.MAIN_HAND, phone);
+
+        HimEntity existing = HimEntity.spawnForTest(level, helper.absolutePos(new BlockPos(24, 0, 0)));
+
+        GuardianPhoneService.handleSelection(player, GuardianPhoneSelection.FOLLOW);
+
+        helper.runAfterDelay(2, () -> {
+            HimEntity him = HimLocator.activeHim(level);
+            if (him == null || him.isRemoved()) {
+                throw new GameTestAssertException("Expected guardian phone to keep the existing Him active");
+            }
+            if (!him.getUUID().equals(existing.getUUID())) {
+                throw new GameTestAssertException("Expected guardian phone recall to reuse the existing Him instead of spawning a new one");
+            }
+            if (him.distanceToSqr(player) > 16.0D) {
+                throw new GameTestAssertException("Expected guardian phone recall to relocate Him near the player, himPos=" + him.position() + ", playerPos=" + player.position());
+            }
+            if (!him.isGuardingPlayer(player)) {
+                throw new GameTestAssertException("Expected recalled Him to start guarding the phone owner");
+            }
+
+            HimTestState.removeHimForTest(helper, him);
+            HimTestState.cleanupEntity(player);
+            helper.succeed();
+        });
+    }
+
     @GameTest(template = "empty", batch = "him_guardian_phone_cancel_follow", timeoutTicks = 160)
     public static void guardianPhoneCancelsFollowWhenSneakUsedDuringGuard(GameTestHelper helper) {
         HimTestState.resetUniqueHim(helper);

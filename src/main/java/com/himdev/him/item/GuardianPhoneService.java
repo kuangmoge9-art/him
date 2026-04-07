@@ -76,6 +76,7 @@ public final class GuardianPhoneService {
         }
 
         if (existing != null && !existing.isRemoved()) {
+            existing.relocateBeside(player);
             return existing;
         }
 

@@ -9,6 +9,7 @@ import com.himdev.him.entity.movement.HimPitEscapeFlight;
 import com.himdev.him.guardian.DivinePunisher;
 import com.himdev.him.registry.HimEntityTypes;
 import com.himdev.him.util.HimLog;
+import com.himdev.him.world.HimChunkLoading;
 import com.himdev.him.world.HimLocator;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -35,10 +36,12 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class HimEntity extends PathfinderMob implements RangedAttackMob {
@@ -120,6 +123,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private UUID guardedPlayerId;
     private HimGuardianMode guardianMode = HimGuardianMode.NONE;
     private int guardianTicksRemaining;
+    @Nullable
+    private ChunkPos forcedChunkPos;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -231,6 +236,10 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         if (HimRemovalProtection.shouldBlockOnRemovedFromWorld(removalAuthorizedInProgress)) {
             HimLog.info("him world_removal_blocked uuid={} client={}", getUUID(), level().isClientSide);
             return;
+        }
+        if (!level().isClientSide && level() instanceof ServerLevel serverLevel) {
+            HimChunkLoading.releaseEntityTicket(serverLevel, getUUID(), forcedChunkPos);
+            forcedChunkPos = null;
         }
         super.onRemovedFromWorld();
     }
@@ -402,6 +411,9 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         sanitizeExternalVisualResidue();
         withAuthorizedDeltaMovementUpdates(() -> super.tick());
         sanitizeExternalVisualResidue();
+        if (!level().isClientSide && level() instanceof ServerLevel serverLevel && !this.isRemoved()) {
+            forcedChunkPos = HimChunkLoading.syncEntityTicket(serverLevel, this, forcedChunkPos);
+        }
     }
 
     @Override

@@ -3,14 +3,17 @@ package com.himdev.him.gametest;
 import com.himdev.him.HimMod;
 import com.himdev.him.entity.HimEntity;
 import com.himdev.him.spawn.FirstJoinHimSpawnController;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
@@ -105,5 +108,53 @@ public final class HimSpawnGameTests {
             }
             helper.succeed();
         });
+    }
+
+    @GameTest(template = "empty", batch = "him_spawn_chunk_loading", timeoutTicks = 160)
+    public static void himKeepsExactlyOneTickingChunkLoadedAndReleasesIt(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        HimEntity him = HimEntity.spawnForTest(level, helper.absolutePos(BlockPos.ZERO));
+
+        helper.runAfterDelay(2, () -> {
+            int ticketCount = tickingEntityChunkCount(level);
+            if (ticketCount != 1) {
+                throw new GameTestAssertException("Expected Him to force exactly one ticking chunk after spawn, got " + ticketCount);
+            }
+
+            BlockPos farChunkPos = helper.absolutePos(new BlockPos(32, 0, 0));
+            him.moveTo(farChunkPos.getX() + 0.5D, farChunkPos.getY(), farChunkPos.getZ() + 0.5D, 0.0F, 0.0F);
+        });
+
+        helper.runAfterDelay(6, () -> {
+            int ticketCount = tickingEntityChunkCount(level);
+            if (ticketCount != 1) {
+                throw new GameTestAssertException("Expected Him chunk forcing to move without leaking old tickets, got " + ticketCount);
+            }
+            if (!ForgeChunkManager.hasForcedChunks(level)) {
+                throw new GameTestAssertException("Expected Him to keep forced chunks active while present");
+            }
+
+            HimTestState.removeHimForTest(helper, him);
+        });
+
+        helper.runAfterDelay(10, () -> {
+            int ticketCount = tickingEntityChunkCount(level);
+            if (ticketCount != 0) {
+                throw new GameTestAssertException("Expected Him chunk tickets to release after authorized removal, got " + ticketCount);
+            }
+            helper.succeed();
+        });
+    }
+
+    private static int tickingEntityChunkCount(ServerLevel level) {
+        ForcedChunksSavedData data = level.getDataStorage()
+                .computeIfAbsent(ForcedChunksSavedData::load, ForcedChunksSavedData::new, ForcedChunksSavedData.FILE_ID);
+        return data.getEntityForcedChunks()
+                .getTickingChunks()
+                .values()
+                .stream()
+                .mapToInt(LongSet::size)
+                .sum();
     }
 }
