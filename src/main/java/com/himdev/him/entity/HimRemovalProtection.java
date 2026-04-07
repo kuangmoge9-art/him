@@ -10,12 +10,12 @@ public final class HimRemovalProtection {
         return !authorized;
     }
 
-    public static boolean shouldBlockSetRemoved(boolean removalAuthorizedInProgress) {
-        return !removalAuthorizedInProgress;
+    public static boolean shouldBlockSetRemoved(Entity.RemovalReason reason, boolean removalAuthorizedInProgress) {
+        return reason != null && reason.shouldDestroy() && !removalAuthorizedInProgress;
     }
 
-    public static boolean shouldBlockOnRemovedFromWorld(boolean removalAuthorizedInProgress) {
-        return !removalAuthorizedInProgress;
+    public static boolean shouldBlockOnRemovedFromWorld(Entity.RemovalReason reason, boolean removalAuthorizedInProgress) {
+        return reason != null && reason.shouldDestroy() && !removalAuthorizedInProgress;
     }
 
     public static boolean shouldBlockClientLevelRemoval(Entity.RemovalReason reason, boolean authorized) {

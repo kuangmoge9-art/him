@@ -14,7 +14,7 @@ abstract class HimEntitySetRemovedMixin {
     @Inject(method = "setRemoved(Lnet/minecraft/world/entity/Entity$RemovalReason;)V", at = @At("HEAD"), cancellable = true)
     private void him$blockUnauthorizedSetRemoved(Entity.RemovalReason reason, CallbackInfo callbackInfo) {
         Object self = this;
-        if (!(self instanceof HimEntity him) || !HimRemovalProtection.shouldBlockSetRemoved(him.isRemovalAuthorizedInProgress())) {
+        if (!(self instanceof HimEntity him) || !HimRemovalProtection.shouldBlockSetRemoved(reason, him.isRemovalAuthorizedInProgress())) {
             return;
         }
         HimLog.info("him set_removed_blocked uuid={} reason={} client={}", him.getUUID(), reason, him.level().isClientSide);

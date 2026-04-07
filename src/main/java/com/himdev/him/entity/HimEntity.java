@@ -233,11 +233,12 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     @Override
     public void onRemovedFromWorld() {
-        if (HimRemovalProtection.shouldBlockOnRemovedFromWorld(removalAuthorizedInProgress)) {
+        RemovalReason reason = getRemovalReason();
+        if (HimRemovalProtection.shouldBlockOnRemovedFromWorld(reason, removalAuthorizedInProgress)) {
             HimLog.info("him world_removal_blocked uuid={} client={}", getUUID(), level().isClientSide);
             return;
         }
-        if (!level().isClientSide && level() instanceof ServerLevel serverLevel) {
+        if (!level().isClientSide && level() instanceof ServerLevel serverLevel && reason != null && reason.shouldDestroy()) {
             HimChunkLoading.releaseEntityTickets(serverLevel, getUUID(), forcedChunks);
             forcedChunks = Collections.emptySet();
         }
@@ -407,6 +408,14 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     }
 
     @Override
+    public void moveTo(double x, double y, double z, float yRot, float xRot) {
+        Level previousLevel = level();
+        ChunkPos previousChunk = this.chunkPosition();
+        super.moveTo(x, y, z, yRot, xRot);
+        syncForcedChunksAfterReposition(previousLevel, previousChunk);
+    }
+
+    @Override
     public void tick() {
         sanitizeExternalVisualResidue();
         withAuthorizedDeltaMovementUpdates(() -> super.tick());
@@ -414,6 +423,19 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel && !this.isRemoved()) {
             forcedChunks = HimChunkLoading.syncEntityTickets(serverLevel, this, forcedChunks);
         }
+    }
+
+    private void syncForcedChunksAfterReposition(Level previousLevel, ChunkPos previousChunk) {
+        if (!isAddedToWorld() || previousLevel.isClientSide || this.isRemoved()) {
+            return;
+        }
+        if (!(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        if (previousLevel == level() && previousChunk.equals(this.chunkPosition())) {
+            return;
+        }
+        forcedChunks = HimChunkLoading.syncEntityTickets(serverLevel, this, forcedChunks);
     }
 
     @Override

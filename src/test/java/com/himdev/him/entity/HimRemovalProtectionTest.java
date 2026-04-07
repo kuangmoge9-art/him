@@ -25,10 +25,12 @@ class HimRemovalProtectionTest {
 
     @Test
     void setRemovedAndWorldRemovalAreBlockedUnlessAuthorized() {
-        assertTrue(HimRemovalProtection.shouldBlockSetRemoved(false));
-        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(true));
-        assertTrue(HimRemovalProtection.shouldBlockOnRemovedFromWorld(false));
-        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(true));
+        assertTrue(HimRemovalProtection.shouldBlockSetRemoved(Entity.RemovalReason.DISCARDED, false));
+        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(Entity.RemovalReason.DISCARDED, true));
+        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK, false));
+        assertTrue(HimRemovalProtection.shouldBlockOnRemovedFromWorld(Entity.RemovalReason.DISCARDED, false));
+        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(Entity.RemovalReason.DISCARDED, true));
+        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(Entity.RemovalReason.UNLOADED_TO_CHUNK, false));
     }
 
     @Test
