@@ -1,4 +1,13 @@
 {
   "entity.him.him": "Him",
-  "effect.him.divine_protection": "Divine Protection"
+  "effect.him.divine_protection": "Divine Protection",
+  "item.him.guardian_phone": "Guardian Phone",
+  "item.him.guardian_phone.mode.follow": "Permanent Guard",
+  "item.him.guardian_phone.mode.timed_follow": "Timed Guard (2 min)",
+  "item.him.guardian_phone.mode_switched": "Guardian phone mode: %s",
+  "item.him.guardian_phone.activated": "Him has answered the call: %s",
+  "item.him.guardian_phone.failed": "Him did not answer the call.",
+  "item.him.guardian_phone.tooltip.use": "Right click to call Him to your side and guard you.",
+  "item.him.guardian_phone.tooltip.switch": "Sneak + right click to switch modes.",
+  "item.him.guardian_phone.tooltip.mode": "Current mode: %s"
 }

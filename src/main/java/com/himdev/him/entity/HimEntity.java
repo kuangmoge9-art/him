@@ -13,6 +13,7 @@ import com.himdev.him.world.HimLocator;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
@@ -53,10 +54,28 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private static final int VOID_TRIGGER_DEPTH = 4;
     private static final int VOID_SAFE_OFFSET = 8;
     private static final int VOID_RECOVERY_SEARCH_HEIGHT = 24;
+    private static final String GUARDED_PLAYER_ID_TAG = "GuardedPlayerId";
+    private static final String GUARDIAN_MODE_TAG = "GuardianMode";
+    private static final String GUARDIAN_TICKS_REMAINING_TAG = "GuardianTicksRemaining";
     private static final int PIT_ESCAPE_MAX_TICKS = 40;
     private static final int PIT_ESCAPE_COOLDOWN_TICKS = 20;
     private static final double RESCUE_EXECUTION_ASCENT_PER_TICK = 0.08D;
     private static final double RESCUE_EXECUTION_ASCENT_MAX_HEIGHT = 2.4D;
+    private static final double GUARD_FOLLOW_SPEED = 1.25D;
+    private static final double GUARD_STOP_DISTANCE_SQR = 1.2D * 1.2D;
+    private static final double GUARD_FOLLOW_START_DISTANCE_SQR = 2.8D * 2.8D;
+    private static final double GUARD_RECALL_DISTANCE_SQR = 10.0D * 10.0D;
+    private static final int[] GUARD_VERTICAL_OFFSETS = new int[] {0, 1, -1};
+    private static final Vec3[] GUARD_ANCHOR_OFFSETS = new Vec3[] {
+            new Vec3(1.7D, 0.0D, 0.0D),
+            new Vec3(1.7D, 0.0D, -0.8D),
+            new Vec3(1.7D, 0.0D, 0.8D),
+            new Vec3(-1.7D, 0.0D, 0.0D),
+            new Vec3(-1.7D, 0.0D, -0.8D),
+            new Vec3(-1.7D, 0.0D, 0.8D),
+            new Vec3(0.0D, 0.0D, -1.8D),
+            new Vec3(0.0D, 0.0D, 1.8D)
+    };
     private static final int[][] VOID_RECOVERY_SEARCH_OFFSETS = new int[][] {
             {0, 0},
             {1, 0},
@@ -98,6 +117,9 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     private boolean rescueVictimNoGravity;
     private double rescueExecutionStartY;
     private double rescueExecutionMaxY;
+    private UUID guardedPlayerId;
+    private HimGuardianMode guardianMode = HimGuardianMode.NONE;
+    private int guardianTicksRemaining;
 
     public HimEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
         super(entityType, level);
@@ -127,6 +149,29 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         super.defineSynchedData();
         this.entityData.define(RESCUE_EXECUTION_VICTIM_ID, NO_RESCUE_VICTIM);
         this.entityData.define(RESCUE_EXECUTION_VISUAL_ACTIVE, false);
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (guardedPlayerId != null) {
+            tag.putUUID(GUARDED_PLAYER_ID_TAG, guardedPlayerId);
+        }
+        tag.putString(GUARDIAN_MODE_TAG, guardianMode.serializedName());
+        if (guardianMode.isTimed()) {
+            tag.putInt(GUARDIAN_TICKS_REMAINING_TAG, guardianTicksRemaining);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        guardedPlayerId = tag.hasUUID(GUARDED_PLAYER_ID_TAG) ? tag.getUUID(GUARDED_PLAYER_ID_TAG) : null;
+        guardianMode = HimGuardianMode.fromSerializedName(tag.getString(GUARDIAN_MODE_TAG));
+        guardianTicksRemaining = tag.getInt(GUARDIAN_TICKS_REMAINING_TAG);
+        if (guardedPlayerId == null || guardianMode == HimGuardianMode.NONE) {
+            clearGuardianState();
+        }
     }
 
     @Override
@@ -406,6 +451,10 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             environmentPressureTracker.resetAfterCorrection(this);
             return;
         }
+        if (level() instanceof ServerLevel serverLevel && tickGuardianEscort(serverLevel)) {
+            environmentPressureTracker.resetAfterCorrection(this);
+            return;
+        }
 
         this.setNoGravity(false);
         super.customServerAiStep();
@@ -457,6 +506,66 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
     public boolean isRescueExecutionVisualActive() {
         return this.entityData.get(RESCUE_EXECUTION_VISUAL_ACTIVE);
+    }
+
+    public void activateGuardian(Player player, HimGuardianMode mode) {
+        int durationTicks = mode != null && mode.isTimed() ? mode.defaultDurationTicks() : 0;
+        activateGuardian(player, mode, durationTicks);
+    }
+
+    public void activateGuardian(Player player, HimGuardianMode mode, int durationTicks) {
+        if (player == null) {
+            return;
+        }
+
+        HimGuardianMode selectedMode = mode == null ? HimGuardianMode.FOLLOW : mode;
+        guardedPlayerId = player.getUUID();
+        guardianMode = selectedMode;
+        guardianTicksRemaining = selectedMode.isTimed() ? Math.max(1, durationTicks) : 0;
+        angerTarget = null;
+        this.setTarget(null);
+        if (!isInRescueExecution() && player.level() == this.level()) {
+            relocateBeside(player);
+        }
+        HimLog.info(
+                "him guardian_mode uuid={} owner={} mode={} ticks={}",
+                getUUID(),
+                player.getScoreboardName(),
+                guardianMode.serializedName(),
+                guardianTicksRemaining
+        );
+    }
+
+    public HimGuardianMode guardianMode() {
+        return guardianMode;
+    }
+
+    public int guardianTicksRemaining() {
+        return guardianTicksRemaining;
+    }
+
+    public boolean isGuardingPlayer(Player player) {
+        return player != null && guardedPlayerId != null && guardedPlayerId.equals(player.getUUID()) && guardianMode != HimGuardianMode.NONE;
+    }
+
+    public boolean hasGuardianAssignment() {
+        return guardianMode != HimGuardianMode.NONE && guardedPlayerId != null;
+    }
+
+    public void relocateBeside(Player player) {
+        if (!(this.level() instanceof ServerLevel serverLevel) || player == null || player.level() != this.level()) {
+            return;
+        }
+
+        Vec3 anchor = resolveGuardianAnchor(serverLevel, player);
+        this.getNavigation().stop();
+        this.moveTo(anchor.x, anchor.y, anchor.z, player.getYRot(), 0.0F);
+        this.setYHeadRot(player.getYRot());
+        this.yHeadRotO = player.getYRot();
+        this.yBodyRot = player.getYRot();
+        this.yBodyRotO = player.getYRot();
+        this.setDeltaMovement(Vec3.ZERO);
+        this.fallDistance = 0.0F;
     }
 
     private boolean isValidCombatTarget(LivingEntity target) {
@@ -535,6 +644,163 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
             return finishRescueExecution(victim);
         }
         return true;
+    }
+
+    private boolean tickGuardianEscort(ServerLevel level) {
+        if (!hasGuardianAssignment()) {
+            return false;
+        }
+
+        if (guardianMode.isTimed()) {
+            guardianTicksRemaining--;
+            if (guardianTicksRemaining <= 0) {
+                HimLog.info("him guardian_departed uuid={} owner={} reason=timed_expired", getUUID(), guardedPlayerId);
+                clearGuardianState();
+                HimRemovalAuthorizer.authorize(getUUID());
+                this.remove(RemovalReason.DISCARDED);
+                return true;
+            }
+        }
+
+        Player guardedPlayer = resolveGuardedPlayer(level);
+        if (guardedPlayer == null || !guardedPlayer.isAlive() || guardedPlayer.isSpectator() || guardedPlayer.level() != this.level()) {
+            this.getNavigation().stop();
+            return false;
+        }
+
+        LivingEntity threat = resolveGuardianThreat(level, guardedPlayer);
+        if (threat != null) {
+            angerTarget = threat;
+            this.setTarget(threat);
+            return false;
+        }
+
+        LivingEntity currentTarget = this.getTarget();
+        if (currentTarget != null && currentTarget.isAlive()) {
+            return false;
+        }
+
+        angerTarget = null;
+        this.setTarget(null);
+        followGuardedPlayer(level, guardedPlayer);
+        return false;
+    }
+
+    private Player resolveGuardedPlayer(ServerLevel level) {
+        if (guardedPlayerId == null) {
+            return null;
+        }
+        return level.getServer().getPlayerList().getPlayer(guardedPlayerId);
+    }
+
+    private LivingEntity resolveGuardianThreat(ServerLevel level, Player guardedPlayer) {
+        LivingEntity directAttacker = guardedPlayer.getLastHurtByMob();
+        if (isValidGuardianThreat(directAttacker, guardedPlayer)) {
+            return directAttacker;
+        }
+
+        LivingEntity directTarget = guardedPlayer.getLastHurtMob();
+        if (isValidGuardianThreat(directTarget, guardedPlayer)) {
+            return directTarget;
+        }
+
+        double scanRange = Math.max(12.0D, this.getAttributeValue(Attributes.FOLLOW_RANGE) * 0.5D);
+        LivingEntity bestThreat = null;
+        double bestDistanceSqr = Double.MAX_VALUE;
+        for (Mob mob : level.getEntitiesOfClass(Mob.class, guardedPlayer.getBoundingBox().inflate(scanRange))) {
+            if (!isValidGuardianThreat(mob, guardedPlayer) || mob.getTarget() != guardedPlayer) {
+                continue;
+            }
+            double distanceSqr = mob.distanceToSqr(guardedPlayer);
+            if (distanceSqr < bestDistanceSqr) {
+                bestThreat = mob;
+                bestDistanceSqr = distanceSqr;
+            }
+        }
+        return bestThreat;
+    }
+
+    private boolean isValidGuardianThreat(LivingEntity target, Player guardedPlayer) {
+        return isValidCombatTarget(target)
+                && target != guardedPlayer
+                && target.level() == this.level();
+    }
+
+    private void followGuardedPlayer(ServerLevel level, Player guardedPlayer) {
+        Vec3 anchor = resolveGuardianAnchor(level, guardedPlayer);
+        double distanceToPlayerSqr = this.distanceToSqr(guardedPlayer);
+        if (distanceToPlayerSqr >= GUARD_RECALL_DISTANCE_SQR) {
+            this.getNavigation().stop();
+            this.moveTo(anchor.x, anchor.y, anchor.z, guardedPlayer.getYRot(), 0.0F);
+            this.setDeltaMovement(Vec3.ZERO);
+            this.fallDistance = 0.0F;
+            return;
+        }
+
+        double distanceToAnchorSqr = this.distanceToSqr(anchor.x, anchor.y, anchor.z);
+        if (distanceToAnchorSqr > GUARD_FOLLOW_START_DISTANCE_SQR) {
+            this.getNavigation().moveTo(anchor.x, anchor.y, anchor.z, GUARD_FOLLOW_SPEED);
+            return;
+        }
+        if (distanceToAnchorSqr <= GUARD_STOP_DISTANCE_SQR) {
+            this.getNavigation().stop();
+        }
+    }
+
+    private Vec3 resolveGuardianAnchor(ServerLevel level, Player guardedPlayer) {
+        Vec3 forward = horizontalFacingVector(guardedPlayer.getYRot());
+        Vec3 right = new Vec3(forward.z, 0.0D, -forward.x);
+
+        for (Vec3 offset : GUARD_ANCHOR_OFFSETS) {
+            Vec3 candidate = guardedPlayer.position()
+                    .add(right.scale(offset.x))
+                    .add(forward.scale(offset.z));
+            Vec3 safeAnchor = findSafeGuardianAnchor(level, candidate, guardedPlayer.getY());
+            if (safeAnchor != null) {
+                return safeAnchor;
+            }
+        }
+
+        return guardedPlayer.position().add(right.scale(1.7D));
+    }
+
+    private Vec3 findSafeGuardianAnchor(ServerLevel level, Vec3 candidate, double preferredY) {
+        BlockPos baseFeet = BlockPos.containing(candidate.x, preferredY, candidate.z);
+        for (int dy : GUARD_VERTICAL_OFFSETS) {
+            BlockPos feet = baseFeet.above(dy);
+            if (isSafeGuardianFeet(level, feet)) {
+                return new Vec3(feet.getX() + 0.5D, feet.getY(), feet.getZ() + 0.5D);
+            }
+        }
+        return null;
+    }
+
+    private boolean isSafeGuardianFeet(ServerLevel level, BlockPos feet) {
+        BlockPos head = feet.above();
+        BlockPos floor = feet.below();
+        BlockState feetState = level.getBlockState(feet);
+        BlockState headState = level.getBlockState(head);
+        BlockState floorState = level.getBlockState(floor);
+        if (!canOccupyGuardSpace(feetState) || !canOccupyGuardSpace(headState)) {
+            return false;
+        }
+        if (feetState.liquid() || headState.liquid()) {
+            return false;
+        }
+        if (floorState.isAir() || floorState.liquid()) {
+            return false;
+        }
+
+        AABB candidateBox = this.getBoundingBox().move(
+                (feet.getX() + 0.5D) - this.getX(),
+                feet.getY() - this.getY(),
+                (feet.getZ() + 0.5D) - this.getZ()
+        );
+        return level.noCollision(this, candidateBox);
+    }
+
+    private boolean canOccupyGuardSpace(BlockState state) {
+        return state.isAir() || state.canBeReplaced();
     }
 
     public boolean isRecoveringFromVoidState() {
@@ -838,6 +1104,12 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         rescueExecutionMaxY = 0.0D;
         setRescueExecutionVictimId(NO_RESCUE_VICTIM);
         setRescueExecutionVisualActive(false);
+    }
+
+    private void clearGuardianState() {
+        guardedPlayerId = null;
+        guardianMode = HimGuardianMode.NONE;
+        guardianTicksRemaining = 0;
     }
 
     private void withAuthorizedDeltaMovementUpdates(Runnable action) {

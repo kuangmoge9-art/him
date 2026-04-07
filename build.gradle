@@ -128,6 +128,9 @@ repositories {
 
     maven {
         url = 'https://repo.spongepowered.org/repository/maven-public/'
+        content {
+            includeGroup 'org.spongepowered'
+        }
     }
 
     if (ultimateSkeletonsJar.exists() || mobBottleJar.exists() || geckolibJar.exists()) {
