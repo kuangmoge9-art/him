@@ -198,7 +198,12 @@ public final class HimGuardianPhoneGameTests {
         player.setItemInHand(InteractionHand.MAIN_HAND, phone);
 
         GuardianPhoneService.handleSelection(player, GuardianPhoneSelection.FOLLOW);
-        helper.runAfterDelay(2, () -> player.hurt(level.damageSources().mobAttack(zombie), 1.0F));
+        helper.runAfterDelay(2, () -> {
+            zombie.setTarget(player);
+            if (!zombie.doHurtTarget(player)) {
+                player.setLastHurtByMob(zombie);
+            }
+        });
 
         helper.runAfterDelay(24, () -> {
             HimEntity him = HimLocator.activeHim(level);

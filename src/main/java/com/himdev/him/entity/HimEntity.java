@@ -775,7 +775,16 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         if (guardedPlayerId == null) {
             return null;
         }
-        return level.getServer().getPlayerList().getPlayer(guardedPlayerId);
+        Player listedPlayer = level.getServer().getPlayerList().getPlayer(guardedPlayerId);
+        if (listedPlayer != null) {
+            return listedPlayer;
+        }
+        for (Entity entity : level.getAllEntities()) {
+            if (entity instanceof Player player && guardedPlayerId.equals(player.getUUID())) {
+                return player;
+            }
+        }
+        return null;
     }
 
     private LivingEntity resolveGuardianThreat(ServerLevel level, Player guardedPlayer) {
