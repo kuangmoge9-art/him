@@ -185,9 +185,39 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.goalSelector.addGoal(2, new HimRangedPunishGoal(this, attackSelector));
         this.goalSelector.addGoal(3, new HimMeleePunishGoal(this, attackSelector));
-        this.goalSelector.addGoal(7, new RandomStrollGoal(this, 0.9D));
-        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 16.0F));
-        this.goalSelector.addGoal(9, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(7, new RandomStrollGoal(this, 0.9D) {
+            @Override
+            public boolean canUse() {
+                return HimEntity.this.canUseAmbientIdleGoals() && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return HimEntity.this.canUseAmbientIdleGoals() && super.canContinueToUse();
+            }
+        });
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 16.0F) {
+            @Override
+            public boolean canUse() {
+                return HimEntity.this.canUseAmbientIdleGoals() && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return HimEntity.this.canUseAmbientIdleGoals() && super.canContinueToUse();
+            }
+        });
+        this.goalSelector.addGoal(9, new RandomLookAroundGoal(this) {
+            @Override
+            public boolean canUse() {
+                return HimEntity.this.canUseAmbientIdleGoals() && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return HimEntity.this.canUseAmbientIdleGoals() && super.canContinueToUse();
+            }
+        });
     }
 
     @Override
@@ -586,6 +616,10 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         return guardianMode != HimGuardianMode.NONE && guardedPlayerId != null;
     }
 
+    private boolean canUseAmbientIdleGoals() {
+        return !hasGuardianAssignment() && !isInRescueExecution();
+    }
+
     public void deactivateGuardian(Player player) {
         if (player != null && !isGuardingPlayer(player)) {
             return;
@@ -612,10 +646,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         Vec3 anchor = resolveGuardianAnchor(serverLevel, player);
         this.getNavigation().stop();
         this.moveTo(anchor.x, anchor.y, anchor.z, player.getYRot(), 0.0F);
-        this.setYHeadRot(player.getYRot());
-        this.yHeadRotO = player.getYRot();
-        this.yBodyRot = player.getYRot();
-        this.yBodyRotO = player.getYRot();
+        alignGuardianFacing(player.getYRot());
         this.setDeltaMovement(Vec3.ZERO);
         this.fallDistance = 0.0F;
     }
@@ -716,6 +747,8 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
 
         Player guardedPlayer = resolveGuardedPlayer(level);
         if (guardedPlayer == null || !guardedPlayer.isAlive() || guardedPlayer.isSpectator() || guardedPlayer.level() != this.level()) {
+            angerTarget = null;
+            this.setTarget(null);
             this.getNavigation().stop();
             return false;
         }
@@ -784,6 +817,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         if (distanceToPlayerSqr >= GUARD_RECALL_DISTANCE_SQR) {
             this.getNavigation().stop();
             this.moveTo(anchor.x, anchor.y, anchor.z, guardedPlayer.getYRot(), 0.0F);
+            alignGuardianFacing(guardedPlayer.getYRot());
             this.setDeltaMovement(Vec3.ZERO);
             this.fallDistance = 0.0F;
             return;
@@ -796,7 +830,19 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
         }
         if (distanceToAnchorSqr <= GUARD_STOP_DISTANCE_SQR) {
             this.getNavigation().stop();
+            alignGuardianFacing(guardedPlayer.getYRot());
         }
+    }
+
+    private void alignGuardianFacing(float yawDegrees) {
+        this.setYRot(yawDegrees);
+        this.yRotO = yawDegrees;
+        this.setXRot(0.0F);
+        this.xRotO = 0.0F;
+        this.setYHeadRot(yawDegrees);
+        this.yHeadRotO = yawDegrees;
+        this.yBodyRot = yawDegrees;
+        this.yBodyRotO = yawDegrees;
     }
 
     private Vec3 resolveGuardianAnchor(ServerLevel level, Player guardedPlayer) {

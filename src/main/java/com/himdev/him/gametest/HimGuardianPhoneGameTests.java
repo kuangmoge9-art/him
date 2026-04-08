@@ -13,6 +13,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestAssertException;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Zombie;
@@ -81,6 +82,37 @@ public final class HimGuardianPhoneGameTests {
             }
             if (him.distanceToSqr(player) > 16.0D) {
                 throw new GameTestAssertException("Expected Him to follow the guarded player, himPos=" + him.position() + ", playerPos=" + player.position());
+            }
+
+            HimTestState.removeHimForTest(helper, him);
+            HimTestState.cleanupEntity(player);
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "him_guardian_phone_follow_stability", timeoutTicks = 200)
+    public static void guardianPhoneFollowerStaysAnchoredWithoutHeadWobble(GameTestHelper helper) {
+        HimTestState.resetUniqueHim(helper);
+        ServerLevel level = helper.getLevel();
+        Player player = TestPlayers.spawnSurvivalPlayer(helper, BlockPos.ZERO);
+        ItemStack phone = new ItemStack(HimItems.GUARDIAN_PHONE.get());
+        player.setItemInHand(InteractionHand.MAIN_HAND, phone);
+
+        GuardianPhoneService.handleSelection(player, GuardianPhoneSelection.FOLLOW);
+
+        helper.runAfterDelay(40, () -> {
+            HimEntity him = HimLocator.activeHim(level);
+            if (him == null || him.isRemoved() || !him.isGuardingPlayer(player)) {
+                throw new GameTestAssertException("Expected guardian follow mode to keep Him active and bound to the player");
+            }
+            if (him.distanceToSqr(player) > 16.0D) {
+                throw new GameTestAssertException("Expected idle guardian to stay beside the player instead of drifting away, himPos=" + him.position() + ", playerPos=" + player.position());
+            }
+            if (Math.abs(Mth.wrapDegrees(him.getYHeadRot() - him.getYRot())) > 1.0F) {
+                throw new GameTestAssertException("Expected idle guardian head yaw to stay locked with the body instead of wobbling, headYaw=" + him.getYHeadRot() + ", bodyYaw=" + him.getYRot());
+            }
+            if (Math.abs(him.getXRot()) > 1.0F) {
+                throw new GameTestAssertException("Expected idle guardian head pitch to stay level, pitch=" + him.getXRot());
             }
 
             HimTestState.removeHimForTest(helper, him);
