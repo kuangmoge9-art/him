@@ -13,8 +13,8 @@ class HimRemovalProtectionTest {
     }
 
     @Test
-    void destroyRemovalIsBlockedOnClientWhenUnauthorized() {
-        assertTrue(HimRemovalProtection.shouldBlockDestroyRemoval(true, false));
+    void destroyRemovalIsAllowedOnClientWhenUnauthorized() {
+        assertFalse(HimRemovalProtection.shouldBlockDestroyRemoval(true, false));
     }
 
     @Test
@@ -24,19 +24,20 @@ class HimRemovalProtectionTest {
     }
 
     @Test
-    void setRemovedAndWorldRemovalAreBlockedUnlessAuthorized() {
-        assertTrue(HimRemovalProtection.shouldBlockSetRemoved(Entity.RemovalReason.DISCARDED, false));
-        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(Entity.RemovalReason.DISCARDED, true));
-        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(Entity.RemovalReason.UNLOADED_TO_CHUNK, false));
-        assertTrue(HimRemovalProtection.shouldBlockOnRemovedFromWorld(Entity.RemovalReason.DISCARDED, false));
-        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(Entity.RemovalReason.DISCARDED, true));
-        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(Entity.RemovalReason.UNLOADED_TO_CHUNK, false));
+    void serverSetRemovedAndWorldRemovalAreBlockedUnlessAuthorized() {
+        assertTrue(HimRemovalProtection.shouldBlockSetRemoved(false, Entity.RemovalReason.DISCARDED, false));
+        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(false, Entity.RemovalReason.DISCARDED, true));
+        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(false, Entity.RemovalReason.UNLOADED_TO_CHUNK, false));
+        assertTrue(HimRemovalProtection.shouldBlockOnRemovedFromWorld(false, Entity.RemovalReason.DISCARDED, false));
+        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(false, Entity.RemovalReason.DISCARDED, true));
+        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(false, Entity.RemovalReason.UNLOADED_TO_CHUNK, false));
     }
 
     @Test
-    void clientLevelRemovalIsBlockedForDestroyReasonsUnlessAuthorized() {
-        assertTrue(HimRemovalProtection.shouldBlockClientLevelRemoval(Entity.RemovalReason.DISCARDED, false));
-        assertTrue(HimRemovalProtection.shouldBlockClientLevelRemoval(Entity.RemovalReason.KILLED, false));
-        assertFalse(HimRemovalProtection.shouldBlockClientLevelRemoval(Entity.RemovalReason.DISCARDED, true));
+    void clientSetRemovedAndWorldRemovalStayAllowed() {
+        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(true, Entity.RemovalReason.DISCARDED, false));
+        assertFalse(HimRemovalProtection.shouldBlockSetRemoved(true, Entity.RemovalReason.KILLED, false));
+        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(true, Entity.RemovalReason.DISCARDED, false));
+        assertFalse(HimRemovalProtection.shouldBlockOnRemovedFromWorld(true, Entity.RemovalReason.KILLED, false));
     }
 }

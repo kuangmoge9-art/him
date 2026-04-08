@@ -264,7 +264,7 @@ public class HimEntity extends PathfinderMob implements RangedAttackMob {
     @Override
     public void onRemovedFromWorld() {
         RemovalReason reason = getRemovalReason();
-        if (HimRemovalProtection.shouldBlockOnRemovedFromWorld(reason, removalAuthorizedInProgress)) {
+        if (HimRemovalProtection.shouldBlockOnRemovedFromWorld(level().isClientSide, reason, removalAuthorizedInProgress)) {
             HimLog.info("him world_removal_blocked uuid={} client={}", getUUID(), level().isClientSide);
             return;
         }

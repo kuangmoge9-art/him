@@ -19,7 +19,7 @@ public final class HimEntityTypes {
             () -> EntityType.Builder.of(HimEntity::new, MobCategory.MISC)
                     .noSummon()
                     .sized(0.6F, 1.95F)
-                    .clientTrackingRange(10)
+                    .clientTrackingRange(32)
                     .build("him")
     );
 

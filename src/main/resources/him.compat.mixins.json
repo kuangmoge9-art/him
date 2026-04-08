@@ -16,7 +16,5 @@
     "UltimateSkeletonsLoadquitProcedureMixin",
     "UltimateSkeletonsSpawnquitProcedureMixin"
   ],
-  "client": [
-    "ClientLevelHimRemovalMixin"
-  ]
+  "client": []
 }

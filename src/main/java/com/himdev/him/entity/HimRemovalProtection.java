@@ -7,18 +7,14 @@ public final class HimRemovalProtection {
     }
 
     public static boolean shouldBlockDestroyRemoval(boolean clientSide, boolean authorized) {
-        return !authorized;
+        return !clientSide && !authorized;
     }
 
-    public static boolean shouldBlockSetRemoved(Entity.RemovalReason reason, boolean removalAuthorizedInProgress) {
-        return reason != null && reason.shouldDestroy() && !removalAuthorizedInProgress;
+    public static boolean shouldBlockSetRemoved(boolean clientSide, Entity.RemovalReason reason, boolean removalAuthorizedInProgress) {
+        return !clientSide && reason != null && reason.shouldDestroy() && !removalAuthorizedInProgress;
     }
 
-    public static boolean shouldBlockOnRemovedFromWorld(Entity.RemovalReason reason, boolean removalAuthorizedInProgress) {
-        return reason != null && reason.shouldDestroy() && !removalAuthorizedInProgress;
-    }
-
-    public static boolean shouldBlockClientLevelRemoval(Entity.RemovalReason reason, boolean authorized) {
-        return !authorized && reason.shouldDestroy();
+    public static boolean shouldBlockOnRemovedFromWorld(boolean clientSide, Entity.RemovalReason reason, boolean removalAuthorizedInProgress) {
+        return !clientSide && reason != null && reason.shouldDestroy() && !removalAuthorizedInProgress;
     }
 }
