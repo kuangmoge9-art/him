@@ -1,0 +1,151 @@
+- generic [ref=e2]:
+  - generic:
+    - generic:
+      - generic:
+        - generic: "?"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - link "Modrinth 首页" [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+      - generic [ref=e13]:
+        - button "Discover content" [ref=e778] [cursor=pointer]:
+          - img [ref=e17]
+          - text: Discover content
+          - img [ref=e20]
+        - link "Host a server" [ref=e779] [cursor=pointer]:
+          - /url: /hosting
+          - img [ref=e24]
+          - text: Host a server
+        - link "Get Modrinth App" [ref=e780] [cursor=pointer]:
+          - /url: /app
+          - img [ref=e28]
+          - text: Get Modrinth App
+      - generic [ref=e30]:
+        - link "Sign in" [active] [ref=e781] [cursor=pointer]:
+          - /url: /auth/sign-in?redirect=/dashboard
+          - img [ref=e33]
+          - text: Sign in
+        - link "设置" [ref=e36] [cursor=pointer]:
+          - /url: /settings
+          - img "设置" [ref=e37]
+    - main [ref=e40]:
+      - alert [ref=e782]: Sign In - Modrinth
+      - generic [ref=e825]:
+        - heading "Sign in with" [level=1] [ref=e826]
+        - generic [ref=e827]:
+          - link "Discord" [ref=e828] [cursor=pointer]:
+            - /url: https://api.modrinth.com/v2/auth/init?provider=discord&url=https%3A%2F%2Fmodrinth.com%2Fauth%2Fsign-in%3Fredirect%3D%252F
+            - img [ref=e829]
+            - generic [ref=e833]: Discord
+          - link "GitHub" [ref=e834] [cursor=pointer]:
+            - /url: https://api.modrinth.com/v2/auth/init?provider=github&url=https%3A%2F%2Fmodrinth.com%2Fauth%2Fsign-in%3Fredirect%3D%252F
+            - img [ref=e835]
+            - generic [ref=e837]: GitHub
+          - link "Microsoft" [ref=e838] [cursor=pointer]:
+            - /url: https://api.modrinth.com/v2/auth/init?provider=microsoft&url=https%3A%2F%2Fmodrinth.com%2Fauth%2Fsign-in%3Fredirect%3D%252F
+            - img [ref=e839]
+            - generic [ref=e844]: Microsoft
+          - link "Google" [ref=e845] [cursor=pointer]:
+            - /url: https://api.modrinth.com/v2/auth/init?provider=google&url=https%3A%2F%2Fmodrinth.com%2Fauth%2Fsign-in%3Fredirect%3D%252F
+            - img [ref=e846]
+            - generic [ref=e854]: Google
+          - link "Steam" [ref=e855] [cursor=pointer]:
+            - /url: https://api.modrinth.com/v2/auth/init?provider=steam&url=https%3A%2F%2Fmodrinth.com%2Fauth%2Fsign-in%3Fredirect%3D%252F
+            - img [ref=e856]
+            - generic [ref=e859]: Steam
+          - link "GitLab" [ref=e860] [cursor=pointer]:
+            - /url: https://api.modrinth.com/v2/auth/init?provider=gitlab&url=https%3A%2F%2Fmodrinth.com%2Fauth%2Fsign-in%3Fredirect%3D%252F
+            - img [ref=e861]
+            - generic [ref=e866]: GitLab
+        - heading "Or use a password" [level=1] [ref=e867]
+        - generic [ref=e868]:
+          - generic [ref=e869]:
+            - img
+            - textbox "Email or username" [ref=e870]
+          - generic [ref=e871]:
+            - img
+            - textbox "Password" [ref=e872]
+          - iframe [ref=e874]:
+            
+          - button "Sign in" [disabled] [ref=e875]:
+            - text: Sign in
+            - img [ref=e876]
+          - generic [ref=e878]:
+            - link "Forgot password?" [ref=e879] [cursor=pointer]:
+              - /url: /auth/reset-password?redirect=/
+            - text: •
+            - link "Create an account" [ref=e880] [cursor=pointer]:
+              - /url: /auth/sign-up?redirect=/
+    - contentinfo [ref=e716]:
+      - generic [ref=e717]:
+        - generic [ref=e718]:
+          - region "Modrinth 信息" [ref=e719]:
+            - img [ref=e720]
+            - generic [ref=e726]:
+              - link [ref=e728] [cursor=pointer]:
+                - /url: https://discord.modrinth.com
+                - img [ref=e729]
+              - link [ref=e732] [cursor=pointer]:
+                - /url: https://bsky.app/profile/modrinth.com
+                - img [ref=e733]
+              - link [ref=e736] [cursor=pointer]:
+                - /url: https://floss.social/@modrinth
+                - img [ref=e737]
+              - link [ref=e740] [cursor=pointer]:
+                - /url: https://x.com/modrinth
+                - img [ref=e741]
+              - link [ref=e744] [cursor=pointer]:
+                - /url: https://github.com/modrinth
+                - img [ref=e745]
+            - generic [ref=e747]:
+              - paragraph [ref=e748]:
+                - text: Modrinth is
+                - link "open source" [ref=e806] [cursor=pointer]:
+                  - /url: https://github.com/modrinth/code
+                - text: .
+              - paragraph [ref=e750]: © 2026 Rinth, Inc.
+          - generic [ref=e751]:
+            - generic [ref=e752]:
+              - heading "About" [level=3] [ref=e807]
+              - link "News" [ref=e808] [cursor=pointer]:
+                - /url: /news
+              - link "Changelog" [ref=e809] [cursor=pointer]:
+                - /url: /news/changelog
+              - link "Status" [ref=e810] [cursor=pointer]:
+                - /url: https://status.modrinth.com
+              - link "Careers" [ref=e811] [cursor=pointer]:
+                - /url: https://careers.modrinth.com
+              - link "Rewards Program" [ref=e812] [cursor=pointer]:
+                - /url: /legal/cmp-info
+            - generic [ref=e759]:
+              - heading "Products" [level=3] [ref=e813]
+              - link "Modrinth+" [ref=e761] [cursor=pointer]:
+                - /url: /plus
+              - link "Modrinth App" [ref=e762] [cursor=pointer]:
+                - /url: /app
+              - link "Modrinth Hosting" [ref=e763] [cursor=pointer]:
+                - /url: /hosting
+            - generic [ref=e764]:
+              - heading "Resources" [level=3] [ref=e814]
+              - link "Help Center" [ref=e815] [cursor=pointer]:
+                - /url: https://support.modrinth.com
+              - link "Translate" [ref=e816] [cursor=pointer]:
+                - /url: https://translate.modrinth.com
+              - link "Report issues" [ref=e817] [cursor=pointer]:
+                - /url: https://github.com/modrinth/code/issues
+              - link "API documentation" [ref=e818] [cursor=pointer]:
+                - /url: https://docs.modrinth.com/api/
+            - generic [ref=e770]:
+              - heading "Legal" [level=3] [ref=e819]
+              - link "Content Rules" [ref=e820] [cursor=pointer]:
+                - /url: /legal/rules
+              - link "Terms of Use" [ref=e821] [cursor=pointer]:
+                - /url: /legal/terms
+              - link "Privacy Policy" [ref=e822] [cursor=pointer]:
+                - /url: /legal/privacy
+              - link "Security Notice" [ref=e823] [cursor=pointer]:
+                - /url: /legal/security
+              - link "Copyright Policy and DMCA" [ref=e824] [cursor=pointer]:
+                - /url: /legal/copyright
+        - generic [ref=e777]: NOT AN OFFICIAL MINECRAFT SERVICE. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.

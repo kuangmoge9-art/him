@@ -13,6 +13,8 @@ base {
     archivesName = mod_id
 }
 
+def enabledGameTestNamespaces = providers.gradleProperty('gameTestNamespaces').orElse(mod_id).get()
+
 def ultimateSkeletonsJar = file('D:/mc qidongqi/.minecraft/mods/Ultimate_skeletons_and_titans-1.4.2.jar')
 def ultimateSkeletonsArtifact = 'Ultimate_skeletons_and_titans'
 def ultimateSkeletonsVersion = '1.4.2'
@@ -94,11 +96,11 @@ minecraft {
 
         client {
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', mod_id
+            property 'forge.enabledGameTestNamespaces', enabledGameTestNamespaces
         }
 
         server {
-            property 'forge.enabledGameTestNamespaces', mod_id
+            property 'forge.enabledGameTestNamespaces', enabledGameTestNamespaces
             args '--nogui'
         }
 
@@ -106,7 +108,7 @@ minecraft {
         // By default, the server will crash when no gametests are provided.
         // The gametest system is also enabled by default for other run configs under the /test command.
         gameTestServer {
-            property 'forge.enabledGameTestNamespaces', mod_id
+            property 'forge.enabledGameTestNamespaces', enabledGameTestNamespaces
         }
 
         data {
@@ -199,6 +201,17 @@ mixin {
 
 tasks.named('test', Test).configure {
     useJUnitPlatform()
+}
+
+tasks.configureEach {
+    if (name == 'prepareRuns') {
+        doLast {
+            copy {
+                from 'src/main/resources/gameteststructures'
+                into 'run/gameteststructures'
+            }
+        }
+    }
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

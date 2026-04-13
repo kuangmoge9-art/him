@@ -16,6 +16,8 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraftforge.gametest.GameTestHolder;
@@ -52,6 +54,21 @@ public final class HimPunishmentGameTests {
                             + nearbyItems.stream().map(item -> item.getItem().toString() + "@" + item.blockPosition()).toList()
                             + ", xp=" + nearbyXp.size()
             );
+            helper.succeed();
+        });
+    }
+
+    @GameTest(template = "empty", batch = "him_punishment_resistance", timeoutTicks = 160)
+    public static void punishedResistanceStackedZombieStillDies(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        Zombie zombie = helper.spawn(EntityType.ZOMBIE, 2, 0, 0);
+        zombie.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 4, false, false));
+
+        DivinePunisher punisher = new DivinePunisher();
+        punisher.punish(level, zombie);
+
+        helper.runAfterDelay(10, () -> {
+            helper.assertFalse(zombie.isAlive(), "Expected punished resistance-stacked zombie to die");
             helper.succeed();
         });
     }
