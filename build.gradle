@@ -15,13 +15,14 @@ base {
 
 def enabledGameTestNamespaces = providers.gradleProperty('gameTestNamespaces').orElse(mod_id).get()
 
-def ultimateSkeletonsJar = file('D:/mc qidongqi/.minecraft/mods/Ultimate_skeletons_and_titans-1.4.2.jar')
+def localModsDir = hasProperty('localModsDir') ? file(property('localModsDir')) : file('localmods')
+def ultimateSkeletonsJar = new File(localModsDir, 'Ultimate_skeletons_and_titans-1.4.2.jar')
 def ultimateSkeletonsArtifact = 'Ultimate_skeletons_and_titans'
 def ultimateSkeletonsVersion = '1.4.2'
-def mobBottleJar = file('D:/mc qidongqi/.minecraft/mods/mobbottle-1.20.1-0.3.jar')
+def mobBottleJar = new File(localModsDir, 'mobbottle-1.20.1-0.3.jar')
 def mobBottleArtifact = 'mobbottle-1.20.1'
 def mobBottleVersion = '0.3'
-def geckolibJar = file('D:/mc qidongqi/.minecraft/mods/geckolib-forge-1.20.1-4.8.3.jar')
+def geckolibJar = new File(localModsDir, 'geckolib-forge-1.20.1-4.8.3.jar')
 def geckolibArtifact = 'geckolib-forge-1.20.1'
 def geckolibVersion = '4.8.3'
 
@@ -135,9 +136,9 @@ repositories {
         }
     }
 
-    if (ultimateSkeletonsJar.exists() || mobBottleJar.exists() || geckolibJar.exists()) {
+    if (localModsDir.exists() && (ultimateSkeletonsJar.exists() || mobBottleJar.exists() || geckolibJar.exists())) {
         flatDir {
-            dir ultimateSkeletonsJar.parentFile
+            dir localModsDir
         }
     }
 

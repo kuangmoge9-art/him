@@ -26,3 +26,13 @@ logs
 
 # Files from Forge MDK
 forge*changelog.txt
+
+# local tooling
+.codex_tmp/
+.codex_tools/
+.playwright-cli/
+
+# local reference assets and jars
+/META-INF/
+/assets/mobbottle/
+/localmods/
